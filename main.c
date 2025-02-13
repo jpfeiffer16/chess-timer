@@ -21,7 +21,7 @@ int main() {
         return 1;
     }
 
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
     SDL_RenderClear(renderer);
     SDL_RenderPresent(renderer);
 
@@ -31,7 +31,6 @@ int main() {
     while (true) {
         while (SDL_PollEvent(&event)) {
             printf("%d\n", event.type);
-            SDL_PumpEvents();
             if (event.type == SDL_QUIT) {
                 _quit = true;
                 SDL_DestroyWindow(window);
