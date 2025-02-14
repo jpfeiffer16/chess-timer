@@ -5,12 +5,15 @@
 
 int main() {
   bool _quit;
+  int window_width = 0;
+  int window_height = 0;
+
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     printf("SDL_Init Error: %s\n", SDL_GetError());
     return 1;
   }
 
-  SDL_Window* window = SDL_CreateWindow("Chess Timer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 0, 0, SDL_WINDOW_RESIZABLE | SDL_WINDOW_FULLSCREEN);
+  SDL_Window* window = SDL_CreateWindow("Chess Timer", 0, 0, 200, 500, SDL_WINDOW_RESIZABLE);
   if (window == NULL) {
     printf("SDL_CreateWindow Error: %s\n", SDL_GetError());
     return 1;
@@ -22,18 +25,22 @@ int main() {
     return 1;
   }
 
-  SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
-  SDL_RenderClear(renderer);
+  void draw() {
 
-  SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-  SDL_RenderDrawRect(renderer, &(SDL_Rect) {
-    .h = 100,
-    .w = 100,
-    .x = 10,
-    .y = 10
-  });
+    SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
+    SDL_RenderClear(renderer);
 
-  SDL_RenderPresent(renderer);
+    SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
+    SDL_RenderFillRect(renderer, &(SDL_Rect) {
+      .h = window_height - 20,
+      .w = window_width - 40,
+      .x = 20,
+      .y = 10
+    });
+
+    SDL_RenderPresent(renderer);
+  }
+  draw();
 
   SDL_Event event;
   while (true) {
@@ -45,6 +52,11 @@ int main() {
         SDL_DestroyWindow(window);
         SDL_Quit();
         break;
+      }
+      if (event.type == SDL_WINDOWEVENT) {
+	window_width = event.window.data1;
+	window_height = event.window.data2;
+	draw();
       }
     }
 
