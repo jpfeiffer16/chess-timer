@@ -3,6 +3,22 @@
 #include <SDL_render.h>
 #include <stdbool.h>
 
+
+void draw(SDL_Renderer *renderer, int win_width, int win_height) {
+  SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
+  SDL_RenderClear(renderer);
+
+  SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
+  SDL_RenderFillRect(renderer, &(SDL_Rect) {
+    .w = win_width - 40,
+    .h = win_height - 20,
+    .x = 20,
+    .y = 10
+  });
+
+  SDL_RenderPresent(renderer);
+}
+
 int main() {
   bool _quit;
   int window_width = 0;
@@ -25,38 +41,26 @@ int main() {
     return 1;
   }
 
-  void draw() {
-
-    SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
-    SDL_RenderClear(renderer);
-
-    SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
-    SDL_RenderFillRect(renderer, &(SDL_Rect) {
-      .h = window_height - 20,
-      .w = window_width - 40,
-      .x = 20,
-      .y = 10
-    });
-
-    SDL_RenderPresent(renderer);
-  }
-  draw();
+  draw(renderer, window_width, window_height);
 
   SDL_Event event;
   while (true) {
     SDL_Delay(100); // TODO: Verify there's no better way to do thsi
     while (SDL_PollEvent(&event)) {
-      printf("%d\n", event.type);
       if (event.type == SDL_QUIT) {
         _quit = true;
         SDL_DestroyWindow(window);
         SDL_Quit();
         break;
       }
-      if (event.type == SDL_WINDOWEVENT) {
-	window_width = event.window.data1;
-	window_height = event.window.data2;
-	draw();
+      if (event.type == SDL_WINDOWEVENT_SIZE_CHANGED) {
+        printf("%d\n", event.type);
+        printf("%d\n", event.window.type);
+        /* if (event.window.type == SDL_WINDOWEVENT_SIZE_CHANGED || event.window.type == SDL_WINDOWEVENT_RESIZED) { */
+        /*   window_width = event.window.data1; */
+          window_height = event.window.data2;
+          draw(renderer, window_width, window_height);
+        /* } */
       }
     }
 
