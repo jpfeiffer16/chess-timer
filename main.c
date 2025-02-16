@@ -10,10 +10,17 @@ void draw(SDL_Renderer *renderer, int win_width, int win_height) {
 
   SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
   SDL_RenderFillRect(renderer, &(SDL_Rect) {
-    .w = win_width - 40,
-    .h = win_height - 20,
-    .x = 20,
+    .w = win_width - 80,
+    .h = (win_height / 2) - 20,
+    .x = 10,
     .y = 10
+  });
+
+  SDL_RenderFillRect(renderer, &(SDL_Rect) {
+    .w = win_width - 80,
+    .h = (win_height / 2) - 20,
+    .x = 10,
+    .y = (win_height / 2) + 10
   });
 
   SDL_RenderPresent(renderer);
@@ -21,15 +28,15 @@ void draw(SDL_Renderer *renderer, int win_width, int win_height) {
 
 int main() {
   bool _quit;
-  int window_width = 0;
-  int window_height = 0;
+  int window_width = 400;
+  int window_height = 600;
 
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     printf("SDL_Init Error: %s\n", SDL_GetError());
     return 1;
   }
 
-  SDL_Window* window = SDL_CreateWindow("Chess Timer", 0, 0, 200, 500, SDL_WINDOW_RESIZABLE);
+  SDL_Window* window = SDL_CreateWindow("Chess Timer", 0, 0, window_width, window_height, SDL_WINDOW_RESIZABLE);
   if (window == NULL) {
     printf("SDL_CreateWindow Error: %s\n", SDL_GetError());
     return 1;
@@ -53,14 +60,15 @@ int main() {
         SDL_Quit();
         break;
       }
-      if (event.type == SDL_WINDOWEVENT_SIZE_CHANGED) {
+      if (event.type == SDL_WINDOWEVENT) {
         printf("%d\n", event.type);
-        printf("%d\n", event.window.type);
-        /* if (event.window.type == SDL_WINDOWEVENT_SIZE_CHANGED || event.window.type == SDL_WINDOWEVENT_RESIZED) { */
-        /*   window_width = event.window.data1; */
+        printf("%d\n", event.window.event);
+        if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED
+	 || event.window.type == SDL_WINDOWEVENT_RESIZED) {
+          window_width = event.window.data1;
           window_height = event.window.data2;
           draw(renderer, window_width, window_height);
-        /* } */
+        }
       }
     }
 
