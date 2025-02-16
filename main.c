@@ -1,10 +1,22 @@
 #include <SDL.h>
 #include <SDL_events.h>
 #include <SDL_render.h>
+#include <SDL_ttf.h>
 #include <stdbool.h>
 
+TTF_Font* font;
+SDL_Renderer* renderer;
 
-void draw(SDL_Renderer *renderer, int win_width, int win_height) {
+SDL_Texture* get_texture() {
+  SDL_Surface* s_timer1 = TTF_RenderText_Solid(font, "test", (SDL_Color) { 255, 255, 255 });
+  SDL_Texture* text_timer1 = SDL_CreateTextureFromSurface(renderer, s_timer1);
+
+  SDL_FreeSurface(s_timer1);
+
+  return text_timer1;
+}
+
+void draw(int win_width, int win_height) {
   SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
   SDL_RenderClear(renderer);
 
@@ -22,6 +34,15 @@ void draw(SDL_Renderer *renderer, int win_width, int win_height) {
     .x = 10,
     .y = (win_height / 2) + 10
   });
+
+  SDL_Texture* texture = get_texture();
+  SDL_RenderCopy(renderer, texture, NULL, &(SDL_Rect){
+      .w = 100,
+      .h = 100,
+      .x = 10,
+      .y = 10,
+  });
+  SDL_DestroyTexture(texture);
 
   SDL_RenderPresent(renderer);
 }
@@ -42,20 +63,28 @@ int main() {
     return 1;
   }
 
-  SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+  renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
   if (renderer == NULL) {
     printf("SDL_CreateRenderer Error: %s\n", SDL_GetError());
     return 1;
   }
 
-  draw(renderer, window_width, window_height);
+  TTF_Init();
+  font = TTF_OpenFont("./assets/unicode.impact.ttf", 100);
+  if (font == NULL) {
+    printf("TTF_OpenFont Error: %s\n", TTF_GetError());
+    return 1;
+  }
+
+  draw(window_width, window_height);
 
   SDL_Event event;
   while (true) {
-    SDL_Delay(100); // TODO: Verify there's no better way to do thsi
+    SDL_Delay(50); // TODO: Verify there's no better way to do thsi
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT) {
         _quit = true;
+	TTF_CloseFont(font);
         SDL_DestroyWindow(window);
         SDL_Quit();
         break;
@@ -67,7 +96,7 @@ int main() {
 	 || event.window.type == SDL_WINDOWEVENT_RESIZED) {
           window_width = event.window.data1;
           window_height = event.window.data2;
-          draw(renderer, window_width, window_height);
+          draw(window_width, window_height);
         }
       }
     }
