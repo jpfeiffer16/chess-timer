@@ -5,10 +5,15 @@
 #include <stdbool.h>
 #include <time.h>
 
-typedef enum { WHITE_RUNNING,
+typedef enum {
+  WHITE_RUNNING,
   BLACK_RUNNING,
   PAUSED
 } t_mode;
+typedef enum {
+  WHITE_BOTTOM,
+  BLACK_BOTTOM,
+} t_orientation;
 
 TTF_Font* timer_font;
 TTF_Font* button_font;
@@ -19,6 +24,7 @@ time_t prev_time;
 time_t white_timer;
 time_t black_timer;
 t_mode mode = PAUSED;
+t_orientation orientation = WHITE_BOTTOM;
 SDL_Color FGWhite = {
   .r = 200,
   .g = 200,
@@ -37,6 +43,10 @@ SDL_Color BGBlack = {
   .b = 30 ,
   .a = 255
 };
+SDL_Rect top_box = { 0 };
+SDL_Rect pause_box = { 0 };
+SDL_Rect flip_box = { 0 };
+SDL_Rect bottom_box = { 0 };
 
 static inline void set_draw_color(SDL_Color* color) {
   SDL_SetRenderDrawColor(renderer, color->r, color->g, color->b, color->a);
@@ -46,7 +56,7 @@ int render_text(char str[], SDL_Color* color, int x, int y) {
   SDL_Surface* s_timer1 = TTF_RenderUTF8_Solid(
     timer_font,
     str,
-    FGWhite);
+    *color);
   SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, s_timer1);
 
   SDL_FreeSurface(s_timer1);
@@ -78,38 +88,39 @@ int draw() {
   set_draw_color(&BGBlack);
   SDL_RenderClear(renderer);
 
-  set_draw_color(&FGBlack);
-  SDL_Rect top_box = {
-    .w = window_width - (padding * 2),
-    .h = (window_height / 2) - 40 - (padding * 2),
-    .x = padding,
-    .y = padding
-  };
+  if (orientation == WHITE_BOTTOM) {
+    set_draw_color(&FGBlack);
+  } else {
+    set_draw_color(&FGWhite);
+  }
+  top_box.w = window_width - (padding * 2);
+  top_box.h = (window_height / 2) - 40 - (padding * 2);
+  top_box.x = padding;
+  top_box.y = padding;
   SDL_RenderFillRect(renderer, &top_box);
 
-  SDL_Rect pause_box = {
-    .w = (window_width / 2) - (padding + (padding / 2)),
-    .h = 80,
-    .x = padding,
-    .y = (window_height / 2) - 40
-  };
+  pause_box.w = (window_width / 2) - (padding + (padding / 2));
+  pause_box.h = 80;
+  pause_box.x = padding;
+  pause_box.y = (window_height / 2) - 40;
   SDL_RenderFillRect(renderer, &pause_box);
 
 
-  SDL_Rect flip_box = {
-    .w = (window_width / 2) - (padding + (padding / 2)),
-    .h = 80,
-    .x = (window_width / 2) + (padding / 2),
-    .y = (window_height / 2) - 40
-  };
+  flip_box.w = (window_width / 2) - (padding + (padding / 2));
+  flip_box.h = 80;
+  flip_box.x = (window_width / 2) + (padding / 2);
+  flip_box.y = (window_height / 2) - 40;
   SDL_RenderFillRect(renderer, &flip_box);
 
-  SDL_Rect bottom_box = {
-    .w = window_width - (padding * 2),
-    .h = (window_height / 2) - 40 - (padding * 2),
-    .x = padding,
-    .y = (window_height / 2) + 40 + padding
-  };
+  if (orientation == WHITE_BOTTOM) {
+    set_draw_color(&FGWhite);
+  } else {
+    set_draw_color(&FGBlack);
+  }
+  bottom_box.w = window_width - (padding * 2);
+  bottom_box.h = (window_height / 2) - 40 - (padding * 2);
+  bottom_box.x = padding;
+  bottom_box.y = (window_height / 2) + 40 + padding;
   SDL_RenderFillRect(renderer, &bottom_box);
 
   render_text("▶", &FGWhite,
@@ -121,20 +132,32 @@ int draw() {
               flip_box.y + (flip_box.h / 2));
 
 
-  char time_str[6];
-  uint minutes = ((uint)white_timer) / 60;
-  uint seconds = ((uint)white_timer) % 60;
-  snprintf(time_str, 6, "%.2d:%.2d", minutes % 60, seconds % 60);
-  render_text(time_str, &FGWhite,
-              top_box.w / 2 + padding,
-              (top_box.h / 2) + padding);
+  char white_time_str[6];
+  uint white_minutes = ((uint)white_timer) / 60;
+  uint white_seconds = ((uint)white_timer) % 60;
+  snprintf(white_time_str, 6, "%.2d:%.2d", white_minutes % 60, white_seconds % 60);
 
-  minutes = ((uint)black_timer) / 60;
-  seconds = ((uint)black_timer) % 60;
-  snprintf(time_str, 6, "%.2d:%.2d", minutes % 60, seconds % 60);
-  render_text(time_str, &FGWhite,
-              bottom_box.x + (bottom_box.w / 2),
-              bottom_box.y + (bottom_box.h / 2));
+  char black_time_str[6];
+  uint black_minutes = ((uint)black_timer) / 60;
+  uint black_seconds = ((uint)black_timer) % 60;
+  snprintf(black_time_str, 6, "%.2d:%.2d", black_minutes % 60, black_seconds % 60);
+
+  if (orientation == WHITE_BOTTOM) {
+    render_text(black_time_str, &FGWhite,
+                top_box.w / 2 + padding,
+                (top_box.h / 2) + padding);
+    render_text(white_time_str, &FGBlack,
+                bottom_box.x + (bottom_box.w / 2),
+                bottom_box.y + (bottom_box.h / 2));
+
+  } else if (orientation == BLACK_BOTTOM) {
+    render_text(white_time_str, &FGWhite,
+                top_box.w / 2 + padding,
+                (top_box.h / 2) + padding);
+    render_text(black_time_str, &FGBlack,
+                bottom_box.x + (bottom_box.w / 2),
+                bottom_box.y + (bottom_box.h / 2));
+  }
 
   SDL_RenderPresent(renderer);
 
@@ -210,6 +233,49 @@ int main() {
           if (!draw()) {
             printf("Unrecoverable error in draw() loop. Exiting.");
             return 1;
+          }
+        }
+      }
+      if (event.type == SDL_MOUSEBUTTONUP) {
+        if (event.button.button == 1) { // Left click
+          if (event.button.x > pause_box.x
+           && event.button.x < pause_box.x + pause_box.w
+           && event.button.y > pause_box.y
+           && event.button.y < pause_box.y + pause_box.h) {
+            mode = PAUSED;
+          }
+
+          if (event.button.x > flip_box.x
+           && event.button.x < flip_box.x + flip_box.w
+           && event.button.y > flip_box.y
+           && event.button.y < flip_box.y + flip_box.h) {
+            if (orientation == WHITE_BOTTOM)  {
+              orientation = BLACK_BOTTOM;
+            } else {
+              orientation = WHITE_BOTTOM;
+            }
+          }
+
+          if (event.button.x > bottom_box.x
+           && event.button.x < bottom_box.x + bottom_box.w
+           && event.button.y > bottom_box.y
+           && event.button.y < bottom_box.y + bottom_box.h) {
+            if (orientation == WHITE_BOTTOM) {
+              mode = BLACK_RUNNING;
+            } else {
+              mode = WHITE_RUNNING;
+            }
+          }
+
+          if (event.button.x > top_box.x
+           && event.button.x < top_box.x + top_box.w
+           && event.button.y > top_box.y
+           && event.button.y < top_box.y + top_box.h) {
+            if (orientation ==  WHITE_BOTTOM) {
+              mode = WHITE_RUNNING;
+            } else {
+              mode = BLACK_RUNNING;
+            }
           }
         }
       }
