@@ -7,8 +7,15 @@
 TTF_Font* font;
 SDL_Renderer* renderer;
 
-SDL_Texture* get_texture() {
-  SDL_Surface* s_timer1 = TTF_RenderText_Solid(font, "test", (SDL_Color) { 255, 255, 255 });
+SDL_Texture* get_texture(char str[]) {
+  SDL_Surface* s_timer1 = TTF_RenderText_Solid(
+    font,
+    str,
+    (SDL_Color) {
+      .r = 200,
+      .g = 200,
+      .b = 200 
+    });
   SDL_Texture* text_timer1 = SDL_CreateTextureFromSurface(renderer, s_timer1);
 
   SDL_FreeSurface(s_timer1);
@@ -16,7 +23,7 @@ SDL_Texture* get_texture() {
   return text_timer1;
 }
 
-void draw(int win_width, int win_height) {
+int draw(int win_width, int win_height) {
   SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
   SDL_RenderClear(renderer);
 
@@ -35,16 +42,32 @@ void draw(int win_width, int win_height) {
     .y = (win_height / 2) + 10
   });
 
-  SDL_Texture* texture = get_texture();
+  SDL_Texture* texture = get_texture("this is a test");
+  if (!texture) {
+    return 0;
+  }
+
+  int width, height;
+
+  if (TTF_SizeText(font, "this is a test", &width, &height) == -1) {
+    printf("TFF_SizeFont Error: %s\n", TTF_GetError());
+    return 0;
+  }
+
+  printf("%d, %d", width, height);
+
   SDL_RenderCopy(renderer, texture, NULL, &(SDL_Rect){
-      .w = 100,
-      .h = 100,
+      .w = width,
+      .h = height,
       .x = 10,
       .y = 10,
   });
+
   SDL_DestroyTexture(texture);
 
   SDL_RenderPresent(renderer);
+
+  return 1;
 }
 
 int main() {
@@ -76,7 +99,10 @@ int main() {
     return 1;
   }
 
-  draw(window_width, window_height);
+  if (!draw(window_width, window_height)) {
+    printf("Unrecoverable error in draw() loop. Exiting.");
+    return 1;
+  }
 
   SDL_Event event;
   while (true) {
@@ -84,7 +110,8 @@ int main() {
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT) {
         _quit = true;
-	TTF_CloseFont(font);
+        TTF_CloseFont(font);
+        TTF_Quit();
         SDL_DestroyWindow(window);
         SDL_Quit();
         break;
@@ -96,7 +123,10 @@ int main() {
 	 || event.window.type == SDL_WINDOWEVENT_RESIZED) {
           window_width = event.window.data1;
           window_height = event.window.data2;
-          draw(window_width, window_height);
+          if (!draw(window_width, window_height)) {
+            printf("Unrecoverable error in draw() loop. Exiting.");
+            return 1;
+          }
         }
       }
     }
