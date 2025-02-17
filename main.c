@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include <time.h>
 
+#define MIRROR 1
+
 typedef enum {
   WHITE_RUNNING,
   BLACK_RUNNING,
@@ -53,15 +55,15 @@ static inline void set_render_color(SDL_Color color) {
   SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
 }
 
-int render_text(char str[], SDL_Color* color, int x, int y) {
-  SDL_Surface* s_timer1 = TTF_RenderUTF8_Solid(
+int render_text(char str[], SDL_Color* color, int x, int y, int angle) {
+  SDL_Surface* s_timer = TTF_RenderUTF8_Solid(
     timer_font,
     str,
     *color);
-  SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, s_timer1);
+  SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, s_timer);
 
-  SDL_FreeSurface(s_timer1);
-  if (!s_timer1) {
+  SDL_FreeSurface(s_timer);
+  if (!s_timer) {
     return 0;
   }
 
@@ -72,12 +74,15 @@ int render_text(char str[], SDL_Color* color, int x, int y) {
     return 0;
   }
 
-  SDL_RenderCopy(renderer, texture, NULL, &(SDL_Rect){
+  if (SDL_RenderCopyEx(renderer, texture, NULL, &(SDL_Rect){
     .w = width,
     .h = height,
     .x = x - (width / 2),
     .y = y - (height / 2),
-  });
+  }, angle, NULL, SDL_FLIP_NONE) == -1) {
+    printf("SDL_RenderCopyEx error: unable to render text: %s", SDL_GetError());
+    return 0;
+  }
 
   SDL_DestroyTexture(texture);
 
@@ -140,11 +145,13 @@ int draw() {
   }
   render_text(pause_icon, &PrimaryWhite,
               pause_box.x + (pause_box.w / 2),
-              pause_box.y + (pause_box.h / 2));
+              pause_box.y + (pause_box.h / 2),
+              0);
 
   render_text("⇅", &PrimaryWhite,
               flip_box.x + (flip_box.w / 2),
-              flip_box.y + (flip_box.h / 2));
+              flip_box.y + (flip_box.h / 2),
+              0);
 
 
   char white_time_str[6];
@@ -160,18 +167,32 @@ int draw() {
   if (orientation == WHITE_BOTTOM) {
     render_text(black_time_str, &top_fg,
                 top_box.w / 2 + padding,
-                (top_box.h / 2) + padding);
+                (top_box.h / 2) + padding,
+#ifdef MIRROR
+                180
+#else
+                0
+#endif
+                );
     render_text(white_time_str, &bottom_fg,
                 bottom_box.x + (bottom_box.w / 2),
-                bottom_box.y + (bottom_box.h / 2));
+                bottom_box.y + (bottom_box.h / 2),
+                0);
 
   } else if (orientation == BLACK_BOTTOM) {
     render_text(white_time_str, &top_fg,
                 top_box.w / 2 + padding,
-                (top_box.h / 2) + padding);
+                (top_box.h / 2) + padding,
+#ifdef MIRROR
+                180
+#else
+                0
+#endif
+                );
     render_text(black_time_str, &bottom_fg,
                 bottom_box.x + (bottom_box.w / 2),
-                bottom_box.y + (bottom_box.h / 2));
+                bottom_box.y + (bottom_box.h / 2),
+                0);
   }
 
   SDL_RenderPresent(renderer);
