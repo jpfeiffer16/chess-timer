@@ -5,29 +5,48 @@
 #include <stdbool.h>
 #include <time.h>
 
+typedef enum { WHITE_RUNNING,
+  BLACK_RUNNING,
+  PAUSED
+} t_mode;
+
 TTF_Font* timer_font;
 TTF_Font* button_font;
 SDL_Renderer* renderer;
 int window_width = 400;
 int window_height = 600;
 time_t prev_time;
-time_t timer_time;
+time_t white_timer;
+time_t black_timer;
+t_mode mode = PAUSED;
+SDL_Color FGWhite = {
+  .r = 200,
+  .g = 200,
+  .b = 200 ,
+  .a = 255
+};
+SDL_Color FGBlack = {
+  .r = 50,
+  .g = 50,
+  .b = 50 ,
+  .a = 255
+};
+SDL_Color BGBlack = {
+  .r = 30,
+  .g = 30,
+  .b = 30 ,
+  .a = 255
+};
 
-typedef enum {
-  WHITE_RUNNING,
-  BLACK_RUNNING,
-  PAUSED
-} t_mode;
+static inline void set_draw_color(SDL_Color* color) {
+  SDL_SetRenderDrawColor(renderer, color->r, color->g, color->b, color->a);
+}
 
-int render_text(char str[], int x, int y) {
+int render_text(char str[], SDL_Color* color, int x, int y) {
   SDL_Surface* s_timer1 = TTF_RenderUTF8_Solid(
     timer_font,
     str,
-    (SDL_Color) {
-      .r = 200,
-      .g = 200,
-      .b = 200 
-    });
+    FGWhite);
   SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, s_timer1);
 
   SDL_FreeSurface(s_timer1);
@@ -56,10 +75,10 @@ int render_text(char str[], int x, int y) {
 
 int draw() {
   const int padding = 10;
-  SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
+  set_draw_color(&BGBlack);
   SDL_RenderClear(renderer);
 
-  SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
+  set_draw_color(&FGBlack);
   SDL_Rect top_box = {
     .w = window_width - (padding * 2),
     .h = (window_height / 2) - 40 - (padding * 2),
@@ -93,17 +112,29 @@ int draw() {
   };
   SDL_RenderFillRect(renderer, &bottom_box);
 
-  render_text("▶", pause_box.x + (pause_box.w / 2), pause_box.y + (pause_box.h / 2));
+  render_text("▶", &FGWhite,
+              pause_box.x + (pause_box.w / 2),
+              pause_box.y + (pause_box.h / 2));
 
-  render_text("⇅", flip_box.x + (flip_box.w / 2), flip_box.y + (flip_box.h / 2));
+  render_text("⇅", &FGWhite,
+              flip_box.x + (flip_box.w / 2),
+              flip_box.y + (flip_box.h / 2));
 
 
   char time_str[6];
-  uint minutes = ((uint)timer_time) / 60;
-  uint seconds = ((uint)timer_time) % 60;
+  uint minutes = ((uint)white_timer) / 60;
+  uint seconds = ((uint)white_timer) % 60;
   snprintf(time_str, 6, "%.2d:%.2d", minutes % 60, seconds % 60);
+  render_text(time_str, &FGWhite,
+              top_box.w / 2 + padding,
+              (top_box.h / 2) + padding);
 
-  render_text(time_str, top_box.w / 2, top_box.h / 2);
+  minutes = ((uint)black_timer) / 60;
+  seconds = ((uint)black_timer) % 60;
+  snprintf(time_str, 6, "%.2d:%.2d", minutes % 60, seconds % 60);
+  render_text(time_str, &FGWhite,
+              bottom_box.x + (bottom_box.w / 2),
+              bottom_box.y + (bottom_box.h / 2));
 
   SDL_RenderPresent(renderer);
 
@@ -117,7 +148,8 @@ int main() {
     printf("time() error: failed to obtain current time.");
     return 0;
   }
-  timer_time = 30 * 60;
+  white_timer = 30 * 60;
+  black_timer = 30 * 60;
 
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     printf("SDL_Init Error: %s\n", SDL_GetError());
@@ -185,7 +217,11 @@ int main() {
 
     time_t cur_time = time(NULL);
     int delta = cur_time - prev_time;
-    timer_time -= delta;
+    if (mode == WHITE_RUNNING) {
+      white_timer -= delta;
+    } else if (mode == BLACK_RUNNING) {
+      black_timer -= delta;
+    }
     if (delta) {
       prev_time = cur_time;
     }
