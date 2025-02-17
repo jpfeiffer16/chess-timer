@@ -3,6 +3,7 @@
 #include <SDL_render.h>
 #include <SDL_ttf.h>
 #include <stdbool.h>
+#include <time.h>
 
 TTF_Font* font;
 SDL_Renderer* renderer;
@@ -28,28 +29,37 @@ int draw(int win_width, int win_height) {
   SDL_RenderClear(renderer);
 
   SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
-  SDL_RenderFillRect(renderer, &(SDL_Rect) {
+  SDL_Rect top_box = {
     .w = win_width - 80,
     .h = (win_height / 2) - 20,
     .x = 10,
     .y = 10
-  });
+  };
+  SDL_RenderFillRect(renderer, &top_box);
 
-  SDL_RenderFillRect(renderer, &(SDL_Rect) {
+  SDL_Rect bottom_box = {
     .w = win_width - 80,
     .h = (win_height / 2) - 20,
     .x = 10,
     .y = (win_height / 2) + 10
-  });
+  };
+  SDL_RenderFillRect(renderer, &bottom_box);
 
-  SDL_Texture* texture = get_texture("this is a test");
+  time_t current_time = time(NULL);
+  if (current_time == -1) {
+    printf("time() error: failed to obtain current time.");
+    return 0;
+  }
+
+  char* time_str = ctime(&current_time);
+  SDL_Texture* texture = get_texture(time_str);
   if (!texture) {
     return 0;
   }
 
   int width, height;
 
-  if (TTF_SizeText(font, "this is a test", &width, &height) == -1) {
+  if (TTF_SizeText(font, time_str, &width, &height) == -1) {
     printf("TFF_SizeFont Error: %s\n", TTF_GetError());
     return 0;
   }
@@ -57,10 +67,10 @@ int draw(int win_width, int win_height) {
   printf("%d, %d", width, height);
 
   SDL_RenderCopy(renderer, texture, NULL, &(SDL_Rect){
-      .w = width,
-      .h = height,
-      .x = 10,
-      .y = 10,
+    .w = width,
+    .h = height,
+    .x = (top_box.w / 2) - (width / 2),
+    .y = (top_box.h / 2) - (height / 2),
   });
 
   SDL_DestroyTexture(texture);
@@ -93,7 +103,7 @@ int main() {
   }
 
   TTF_Init();
-  font = TTF_OpenFont("./assets/unicode.impact.ttf", 100);
+  font = TTF_OpenFont("./assets/unicode.impact.ttf", 40);
   if (font == NULL) {
     printf("TTF_OpenFont Error: %s\n", TTF_GetError());
     return 1;
