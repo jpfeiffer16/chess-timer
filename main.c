@@ -7,6 +7,10 @@
 
 TTF_Font* font;
 SDL_Renderer* renderer;
+int window_width = 400;
+int window_height = 600;
+time_t prev_time;
+time_t timer_time;
 
 SDL_Texture* get_texture(char str[]) {
   SDL_Surface* s_timer1 = TTF_RenderText_Solid(
@@ -24,34 +28,33 @@ SDL_Texture* get_texture(char str[]) {
   return text_timer1;
 }
 
-int draw(int win_width, int win_height) {
+int draw() {
   SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
   SDL_RenderClear(renderer);
 
   SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
   SDL_Rect top_box = {
-    .w = win_width - 80,
-    .h = (win_height / 2) - 20,
+    .w = window_width - 80,
+    .h = (window_height / 2) - 20,
     .x = 10,
     .y = 10
   };
   SDL_RenderFillRect(renderer, &top_box);
 
   SDL_Rect bottom_box = {
-    .w = win_width - 80,
-    .h = (win_height / 2) - 20,
+    .w = window_width - 80,
+    .h = (window_height / 2) - 20,
     .x = 10,
-    .y = (win_height / 2) + 10
+    .y = (window_height / 2) + 10
   };
   SDL_RenderFillRect(renderer, &bottom_box);
 
-  time_t current_time = time(NULL);
-  if (current_time == -1) {
-    printf("time() error: failed to obtain current time.");
-    return 0;
-  }
 
-  char* time_str = ctime(&current_time);
+
+  char time_str[1000];
+  int minutes = ((int)timer_time) / 100 / 60;
+  int seconds = ((int)timer_time) % (60 * 1000);
+  sprintf(time_str, "%.2d:%.2d", minutes, seconds);
   SDL_Texture* texture = get_texture(time_str);
   if (!texture) {
     return 0;
@@ -64,7 +67,7 @@ int draw(int win_width, int win_height) {
     return 0;
   }
 
-  printf("%d, %d", width, height);
+  /* printf("%d, %d", width, height); */
 
   SDL_RenderCopy(renderer, texture, NULL, &(SDL_Rect){
     .w = width,
@@ -82,8 +85,12 @@ int draw(int win_width, int win_height) {
 
 int main() {
   bool _quit;
-  int window_width = 400;
-  int window_height = 600;
+  prev_time = time(NULL);
+  if (prev_time == -1) {
+    printf("time() error: failed to obtain current time.");
+    return 0;
+  }
+  timer_time = 30 * 60 * 1000;
 
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     printf("SDL_Init Error: %s\n", SDL_GetError());
@@ -109,14 +116,14 @@ int main() {
     return 1;
   }
 
-  if (!draw(window_width, window_height)) {
+  if (!draw()) {
     printf("Unrecoverable error in draw() loop. Exiting.");
     return 1;
   }
 
   SDL_Event event;
   while (true) {
-    SDL_Delay(50); // TODO: Verify there's no better way to do thsi
+    SDL_Delay(50); // TODO: Verify there's no better way to do this
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT) {
         _quit = true;
@@ -127,18 +134,28 @@ int main() {
         break;
       }
       if (event.type == SDL_WINDOWEVENT) {
-        printf("%d\n", event.type);
-        printf("%d\n", event.window.event);
         if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED
-	 || event.window.type == SDL_WINDOWEVENT_RESIZED) {
+         || event.window.type == SDL_WINDOWEVENT_RESIZED) {
           window_width = event.window.data1;
           window_height = event.window.data2;
-          if (!draw(window_width, window_height)) {
+        }
+        if (event.window.event == SDL_WINDOWEVENT_EXPOSED) {
+          // For now, force a draw. May be overkill. Remove if not needed.
+          if (!draw()) {
             printf("Unrecoverable error in draw() loop. Exiting.");
             return 1;
           }
         }
       }
+    }
+
+    time_t cur_time = time(NULL);
+    int delta = cur_time - prev_time;
+    timer_time -= delta;
+    printf("%d\n", delta);
+    if (!draw()) {
+      printf("Unrecoverable error in draw() loop. Exiting.");
+      return 1;
     }
 
     if (_quit) return 0;
