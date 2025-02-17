@@ -19,8 +19,8 @@ typedef enum {
   PAUSED
 } t_mode;
 
-SDL_Texture* get_texture(char str[]) {
-  SDL_Surface* s_timer1 = TTF_RenderText_Solid(
+int render_text(char str[], int x, int y) {
+  SDL_Surface* s_timer1 = TTF_RenderUTF8_Solid(
     timer_font,
     str,
     (SDL_Color) {
@@ -28,11 +28,30 @@ SDL_Texture* get_texture(char str[]) {
       .g = 200,
       .b = 200 
     });
-  SDL_Texture* text_timer1 = SDL_CreateTextureFromSurface(renderer, s_timer1);
+  SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, s_timer1);
 
   SDL_FreeSurface(s_timer1);
+  if (!s_timer1) {
+    return 0;
+  }
 
-  return text_timer1;
+  int width, height;
+
+  if (TTF_SizeText(timer_font, str, &width, &height) == -1) {
+    printf("TFF_SizeFont Error: %s\n", TTF_GetError());
+    return 0;
+  }
+
+  SDL_RenderCopy(renderer, texture, NULL, &(SDL_Rect){
+    .w = width,
+    .h = height,
+    .x = x - (width / 2),
+    .y = y - (height / 2),
+  });
+
+  SDL_DestroyTexture(texture);
+
+  return 1;
 }
 
 int draw() {
@@ -57,6 +76,7 @@ int draw() {
   };
   SDL_RenderFillRect(renderer, &pause_box);
 
+
   SDL_Rect flip_box = {
     .w = (window_width / 2) - (padding + (padding / 2)),
     .h = 80,
@@ -73,32 +93,17 @@ int draw() {
   };
   SDL_RenderFillRect(renderer, &bottom_box);
 
+  render_text("▶", pause_box.x + (pause_box.w / 2), pause_box.y + (pause_box.h / 2));
+
+  render_text("⇅", flip_box.x + (flip_box.w / 2), flip_box.y + (flip_box.h / 2));
 
 
-  char time_str[1000];
-  int minutes = ((int)timer_time) / 60;
-  int seconds = ((int)timer_time) % 60;
-  sprintf(time_str, "%.2d:%.2d", minutes, seconds);
-  SDL_Texture* texture = get_texture(time_str);
-  if (!texture) {
-    return 0;
-  }
+  char time_str[6];
+  uint minutes = ((uint)timer_time) / 60;
+  uint seconds = ((uint)timer_time) % 60;
+  snprintf(time_str, 6, "%.2d:%.2d", minutes % 60, seconds % 60);
 
-  int width, height;
-
-  if (TTF_SizeText(timer_font, time_str, &width, &height) == -1) {
-    printf("TFF_SizeFont Error: %s\n", TTF_GetError());
-    return 0;
-  }
-
-  SDL_RenderCopy(renderer, texture, NULL, &(SDL_Rect){
-    .w = width,
-    .h = height,
-    .x = (top_box.w / 2) - (width / 2),
-    .y = (top_box.h / 2) - (height / 2),
-  });
-
-  SDL_DestroyTexture(texture);
+  render_text(time_str, top_box.w / 2, top_box.h / 2);
 
   SDL_RenderPresent(renderer);
 
@@ -132,13 +137,13 @@ int main() {
   }
 
   TTF_Init();
-  timer_font = TTF_OpenFont("./assets/unicode.impact.ttf", 80);
+  timer_font = TTF_OpenFont("./assets/Monocraft.ttf", 80);
   if (timer_font == NULL) {
     printf("TTF_OpenFont Error: %s\n", TTF_GetError());
     return 1;
   }
 
-  button_font = TTF_OpenFont("./assets/unicode.impact.ttf", 120);
+  button_font = TTF_OpenFont("./assets/unicode.impact.ttf", 80);
   if (timer_font == NULL) {
     printf("TTF_OpenFont Error: %s\n", TTF_GetError());
     return 1;
