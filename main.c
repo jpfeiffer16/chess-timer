@@ -46,6 +46,18 @@ SDL_Color SecondaryBlack = {
   .b = 30 ,
   .a = 255
 };
+SDL_Color PrimaryWarning = {
+  .r = 180,
+  .g = 133,
+  .b = 50,
+  .a = 255
+};
+SDL_Color PrimaryFlag = {
+  .r = 100,
+  .g = 30,
+  .b = 30 ,
+  .a = 255
+};
 SDL_Rect top_box = { 0 };
 SDL_Rect pause_box = { 0 };
 SDL_Rect flip_box = { 0 };
@@ -104,11 +116,35 @@ int draw() {
     top_bg = PrimaryBlack;
     bottom_fg = PrimaryBlack;
     bottom_bg = PrimaryWhite;
+    if (black_timer < 60) {
+      top_bg = PrimaryWarning;
+    }
+    if (black_timer < 1) {
+      top_bg = PrimaryFlag;
+    }
+    if (white_timer < 60) {
+      bottom_bg = PrimaryWarning;
+    }
+    if (white_timer < 1) {
+      bottom_bg = PrimaryFlag;
+    }
   } else if (orientation == BLACK_BOTTOM) {
     top_fg = PrimaryBlack;
     top_bg = PrimaryWhite;
     bottom_fg = PrimaryWhite;
     bottom_bg = PrimaryBlack;
+    if (white_timer < 60) {
+      top_bg = PrimaryWarning;
+    }
+    if (white_timer < 1) {
+      top_bg = PrimaryFlag;
+    }
+    if (black_timer < 60) {
+      bottom_bg = PrimaryWarning;
+    }
+    if (black_timer < 1) {
+      bottom_bg = PrimaryFlag;
+    }
   }
 
   set_render_color(top_bg);
@@ -207,8 +243,8 @@ int main() {
     printf("time() error: failed to obtain current time.");
     return 0;
   }
-  white_timer = 30 * 60;
-  black_timer = 30 * 60;
+  white_timer = 60 * 30;
+  black_timer = 60 * 30;
 
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     printf("SDL_Init Error: %s\n", SDL_GetError());
@@ -328,9 +364,13 @@ int main() {
     time_t cur_time = time(NULL);
     int delta = cur_time - prev_time;
     if (mode == WHITE_RUNNING) {
-      white_timer -= delta;
+      if (white_timer > 0) {
+        white_timer -= delta;
+      }
     } else if (mode == BLACK_RUNNING) {
-      black_timer -= delta;
+      if (black_timer > 0) {
+        black_timer -= delta;
+      }
     }
     if (delta) {
       prev_time = cur_time;
