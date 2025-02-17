@@ -5,16 +5,23 @@
 #include <stdbool.h>
 #include <time.h>
 
-TTF_Font* font;
+TTF_Font* timer_font;
+TTF_Font* button_font;
 SDL_Renderer* renderer;
 int window_width = 400;
 int window_height = 600;
 time_t prev_time;
 time_t timer_time;
 
+typedef enum {
+  WHITE_RUNNING,
+  BLACK_RUNNING,
+  PAUSED
+} t_mode;
+
 SDL_Texture* get_texture(char str[]) {
   SDL_Surface* s_timer1 = TTF_RenderText_Solid(
-    font,
+    timer_font,
     str,
     (SDL_Color) {
       .r = 200,
@@ -29,31 +36,48 @@ SDL_Texture* get_texture(char str[]) {
 }
 
 int draw() {
+  const int padding = 10;
   SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
   SDL_RenderClear(renderer);
 
   SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
   SDL_Rect top_box = {
-    .w = window_width - 80,
-    .h = (window_height / 2) - 20,
-    .x = 10,
-    .y = 10
+    .w = window_width - (padding * 2),
+    .h = (window_height / 2) - 40 - (padding * 2),
+    .x = padding,
+    .y = padding
   };
   SDL_RenderFillRect(renderer, &top_box);
 
+  SDL_Rect pause_box = {
+    .w = (window_width / 2) - (padding + (padding / 2)),
+    .h = 80,
+    .x = padding,
+    .y = (window_height / 2) - 40
+  };
+  SDL_RenderFillRect(renderer, &pause_box);
+
+  SDL_Rect flip_box = {
+    .w = (window_width / 2) - (padding + (padding / 2)),
+    .h = 80,
+    .x = (window_width / 2) + (padding / 2),
+    .y = (window_height / 2) - 40
+  };
+  SDL_RenderFillRect(renderer, &flip_box);
+
   SDL_Rect bottom_box = {
-    .w = window_width - 80,
-    .h = (window_height / 2) - 20,
-    .x = 10,
-    .y = (window_height / 2) + 10
+    .w = window_width - (padding * 2),
+    .h = (window_height / 2) - 40 - (padding * 2),
+    .x = padding,
+    .y = (window_height / 2) + 40 + padding
   };
   SDL_RenderFillRect(renderer, &bottom_box);
 
 
 
   char time_str[1000];
-  int minutes = ((int)timer_time) / 100 / 60;
-  int seconds = ((int)timer_time) % (60 * 1000);
+  int minutes = ((int)timer_time) / 60;
+  int seconds = ((int)timer_time) % 60;
   sprintf(time_str, "%.2d:%.2d", minutes, seconds);
   SDL_Texture* texture = get_texture(time_str);
   if (!texture) {
@@ -62,12 +86,10 @@ int draw() {
 
   int width, height;
 
-  if (TTF_SizeText(font, time_str, &width, &height) == -1) {
+  if (TTF_SizeText(timer_font, time_str, &width, &height) == -1) {
     printf("TFF_SizeFont Error: %s\n", TTF_GetError());
     return 0;
   }
-
-  /* printf("%d, %d", width, height); */
 
   SDL_RenderCopy(renderer, texture, NULL, &(SDL_Rect){
     .w = width,
@@ -90,7 +112,7 @@ int main() {
     printf("time() error: failed to obtain current time.");
     return 0;
   }
-  timer_time = 30 * 60 * 1000;
+  timer_time = 30 * 60;
 
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     printf("SDL_Init Error: %s\n", SDL_GetError());
@@ -110,8 +132,14 @@ int main() {
   }
 
   TTF_Init();
-  font = TTF_OpenFont("./assets/unicode.impact.ttf", 40);
-  if (font == NULL) {
+  timer_font = TTF_OpenFont("./assets/unicode.impact.ttf", 80);
+  if (timer_font == NULL) {
+    printf("TTF_OpenFont Error: %s\n", TTF_GetError());
+    return 1;
+  }
+
+  button_font = TTF_OpenFont("./assets/unicode.impact.ttf", 120);
+  if (timer_font == NULL) {
     printf("TTF_OpenFont Error: %s\n", TTF_GetError());
     return 1;
   }
@@ -127,7 +155,8 @@ int main() {
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT) {
         _quit = true;
-        TTF_CloseFont(font);
+        TTF_CloseFont(timer_font);
+        TTF_CloseFont(button_font);
         TTF_Quit();
         SDL_DestroyWindow(window);
         SDL_Quit();
@@ -152,7 +181,9 @@ int main() {
     time_t cur_time = time(NULL);
     int delta = cur_time - prev_time;
     timer_time -= delta;
-    printf("%d\n", delta);
+    if (delta) {
+      prev_time = cur_time;
+    }
     if (!draw()) {
       printf("Unrecoverable error in draw() loop. Exiting.");
       return 1;
