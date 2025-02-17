@@ -24,20 +24,21 @@ time_t prev_time;
 time_t white_timer;
 time_t black_timer;
 t_mode mode = PAUSED;
+t_mode prev_mode = PAUSED;
 t_orientation orientation = WHITE_BOTTOM;
-SDL_Color FGWhite = {
+SDL_Color PrimaryWhite = {
   .r = 200,
   .g = 200,
   .b = 200 ,
   .a = 255
 };
-SDL_Color FGBlack = {
+SDL_Color PrimaryBlack = {
   .r = 50,
   .g = 50,
   .b = 50 ,
   .a = 255
 };
-SDL_Color BGBlack = {
+SDL_Color SecondaryBlack = {
   .r = 30,
   .g = 30,
   .b = 30 ,
@@ -48,8 +49,8 @@ SDL_Rect pause_box = { 0 };
 SDL_Rect flip_box = { 0 };
 SDL_Rect bottom_box = { 0 };
 
-static inline void set_draw_color(SDL_Color* color) {
-  SDL_SetRenderDrawColor(renderer, color->r, color->g, color->b, color->a);
+static inline void set_render_color(SDL_Color color) {
+  SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
 }
 
 int render_text(char str[], SDL_Color* color, int x, int y) {
@@ -85,20 +86,34 @@ int render_text(char str[], SDL_Color* color, int x, int y) {
 
 int draw() {
   const int padding = 10;
-  set_draw_color(&BGBlack);
+  set_render_color(SecondaryBlack);
   SDL_RenderClear(renderer);
 
+  SDL_Color top_fg;
+  SDL_Color top_bg;
+  SDL_Color bottom_fg;
+  SDL_Color bottom_bg;
+
   if (orientation == WHITE_BOTTOM) {
-    set_draw_color(&FGBlack);
-  } else {
-    set_draw_color(&FGWhite);
+    top_fg = PrimaryWhite;
+    top_bg = PrimaryBlack;
+    bottom_fg = PrimaryBlack;
+    bottom_bg = PrimaryWhite;
+  } else if (orientation == BLACK_BOTTOM) {
+    top_fg = PrimaryBlack;
+    top_bg = PrimaryWhite;
+    bottom_fg = PrimaryWhite;
+    bottom_bg = PrimaryBlack;
   }
+
+  set_render_color(top_bg);
   top_box.w = window_width - (padding * 2);
   top_box.h = (window_height / 2) - 40 - (padding * 2);
   top_box.x = padding;
   top_box.y = padding;
   SDL_RenderFillRect(renderer, &top_box);
 
+  set_render_color(PrimaryBlack);
   pause_box.w = (window_width / 2) - (padding + (padding / 2));
   pause_box.h = 80;
   pause_box.x = padding;
@@ -112,22 +127,22 @@ int draw() {
   flip_box.y = (window_height / 2) - 40;
   SDL_RenderFillRect(renderer, &flip_box);
 
-  if (orientation == WHITE_BOTTOM) {
-    set_draw_color(&FGWhite);
-  } else {
-    set_draw_color(&FGBlack);
-  }
+  set_render_color(bottom_bg);
   bottom_box.w = window_width - (padding * 2);
   bottom_box.h = (window_height / 2) - 40 - (padding * 2);
   bottom_box.x = padding;
   bottom_box.y = (window_height / 2) + 40 + padding;
   SDL_RenderFillRect(renderer, &bottom_box);
 
-  render_text("▶", &FGWhite,
+  char* pause_icon = "⏸";
+  if (mode == PAUSED) {
+    pause_icon = "▶";
+  }
+  render_text(pause_icon, &PrimaryWhite,
               pause_box.x + (pause_box.w / 2),
               pause_box.y + (pause_box.h / 2));
 
-  render_text("⇅", &FGWhite,
+  render_text("⇅", &PrimaryWhite,
               flip_box.x + (flip_box.w / 2),
               flip_box.y + (flip_box.h / 2));
 
@@ -143,18 +158,18 @@ int draw() {
   snprintf(black_time_str, 6, "%.2d:%.2d", black_minutes % 60, black_seconds % 60);
 
   if (orientation == WHITE_BOTTOM) {
-    render_text(black_time_str, &FGWhite,
+    render_text(black_time_str, &top_fg,
                 top_box.w / 2 + padding,
                 (top_box.h / 2) + padding);
-    render_text(white_time_str, &FGBlack,
+    render_text(white_time_str, &bottom_fg,
                 bottom_box.x + (bottom_box.w / 2),
                 bottom_box.y + (bottom_box.h / 2));
 
   } else if (orientation == BLACK_BOTTOM) {
-    render_text(white_time_str, &FGWhite,
+    render_text(white_time_str, &top_fg,
                 top_box.w / 2 + padding,
                 (top_box.h / 2) + padding);
-    render_text(black_time_str, &FGBlack,
+    render_text(black_time_str, &bottom_fg,
                 bottom_box.x + (bottom_box.w / 2),
                 bottom_box.y + (bottom_box.h / 2));
   }
@@ -242,7 +257,13 @@ int main() {
            && event.button.x < pause_box.x + pause_box.w
            && event.button.y > pause_box.y
            && event.button.y < pause_box.y + pause_box.h) {
-            mode = PAUSED;
+            t_mode cur_mode = mode;
+            if (mode != PAUSED) {
+              mode = PAUSED;
+            } else {
+              mode = prev_mode;
+            }
+            prev_mode = cur_mode;
           }
 
           if (event.button.x > flip_box.x
@@ -260,6 +281,7 @@ int main() {
            && event.button.x < bottom_box.x + bottom_box.w
            && event.button.y > bottom_box.y
            && event.button.y < bottom_box.y + bottom_box.h) {
+            prev_mode = mode;
             if (orientation == WHITE_BOTTOM) {
               mode = BLACK_RUNNING;
             } else {
@@ -271,6 +293,7 @@ int main() {
            && event.button.x < top_box.x + top_box.w
            && event.button.y > top_box.y
            && event.button.y < top_box.y + top_box.h) {
+            prev_mode = mode;
             if (orientation ==  WHITE_BOTTOM) {
               mode = WHITE_RUNNING;
             } else {
