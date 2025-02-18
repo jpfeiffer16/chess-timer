@@ -101,8 +101,31 @@ int render_text(char str[], SDL_Color* color, int x, int y, int angle) {
   return 1;
 }
 
-int draw() {
+void flow() {
   const int padding = 10;
+
+  top_box.w = window_width - (padding * 2);
+  top_box.h = (window_height / 2) - 40 - (padding * 2);
+  top_box.x = padding;
+  top_box.y = padding;
+
+  pause_box.w = (window_width / 2) - (padding + (padding / 2));
+  pause_box.h = 80;
+  pause_box.x = padding;
+  pause_box.y = (window_height / 2) - 40;
+
+  flip_box.w = (window_width / 2) - (padding + (padding / 2));
+  flip_box.h = 80;
+  flip_box.x = (window_width / 2) + (padding / 2);
+  flip_box.y = (window_height / 2) - 40;
+
+  bottom_box.w = window_width - (padding * 2);
+  bottom_box.h = (window_height / 2) - 40 - (padding * 2);
+  bottom_box.x = padding;
+  bottom_box.y = (window_height / 2) + 40 + padding;
+}
+
+int draw() {
   set_render_color(SecondaryBlack);
   SDL_RenderClear(renderer);
 
@@ -148,31 +171,15 @@ int draw() {
   }
 
   set_render_color(top_bg);
-  top_box.w = window_width - (padding * 2);
-  top_box.h = (window_height / 2) - 40 - (padding * 2);
-  top_box.x = padding;
-  top_box.y = padding;
   SDL_RenderFillRect(renderer, &top_box);
 
   set_render_color(PrimaryBlack);
-  pause_box.w = (window_width / 2) - (padding + (padding / 2));
-  pause_box.h = 80;
-  pause_box.x = padding;
-  pause_box.y = (window_height / 2) - 40;
   SDL_RenderFillRect(renderer, &pause_box);
 
 
-  flip_box.w = (window_width / 2) - (padding + (padding / 2));
-  flip_box.h = 80;
-  flip_box.x = (window_width / 2) + (padding / 2);
-  flip_box.y = (window_height / 2) - 40;
   SDL_RenderFillRect(renderer, &flip_box);
 
   set_render_color(bottom_bg);
-  bottom_box.w = window_width - (padding * 2);
-  bottom_box.h = (window_height / 2) - 40 - (padding * 2);
-  bottom_box.x = padding;
-  bottom_box.y = (window_height / 2) + 40 + padding;
   SDL_RenderFillRect(renderer, &bottom_box);
 
   char* pause_icon = "⏸";
@@ -202,8 +209,8 @@ int draw() {
 
   if (orientation == WHITE_BOTTOM) {
     render_text(black_time_str, &top_fg,
-                top_box.w / 2 + padding,
-                (top_box.h / 2) + padding,
+                top_box.x + (top_box.w / 2),
+                top_box.y + (top_box.h / 2),
 #ifdef MIRROR
                 180
 #else
@@ -217,8 +224,8 @@ int draw() {
 
   } else if (orientation == BLACK_BOTTOM) {
     render_text(white_time_str, &top_fg,
-                top_box.w / 2 + padding,
-                (top_box.h / 2) + padding,
+                top_box.x + (top_box.w / 2),
+                top_box.y + (top_box.h / 2),
 #ifdef MIRROR
                 180
 #else
@@ -270,14 +277,15 @@ int main() {
     return 1;
   }
 
-  button_font = TTF_OpenFont("./assets/unicode.impact.ttf", 80);
+  button_font = TTF_OpenFont("./assets/Monocraft.ttf", 80);
   if (timer_font == NULL) {
     printf("TTF_OpenFont Error: %s\n", TTF_GetError());
     return 1;
   }
 
+  flow();
   if (!draw()) {
-    printf("Unrecoverable error in draw() loop. Exiting.");
+    printf("Unrecoverable error in draw() function. Exiting.");
     return 1;
   }
 
@@ -299,11 +307,12 @@ int main() {
          || event.window.type == SDL_WINDOWEVENT_RESIZED) {
           window_width = event.window.data1;
           window_height = event.window.data2;
+	  flow();
         }
         if (event.window.event == SDL_WINDOWEVENT_EXPOSED) {
           // For now, force a draw. May be overkill. Remove if not needed.
           if (!draw()) {
-            printf("Unrecoverable error in draw() loop. Exiting.");
+            printf("Unrecoverable error in draw() function. Exiting.");
             return 1;
           }
         }
