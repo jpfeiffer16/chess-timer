@@ -28,6 +28,9 @@ time_t black_timer;
 t_mode mode = PAUSED;
 t_mode prev_mode = PAUSED;
 t_orientation orientation = WHITE_BOTTOM;
+Uint32 wav_length;
+Uint8 *wav_pos;
+Uint8 *wav_buffer;
 SDL_Color PrimaryWhite = {
   .r = 200,
   .g = 200,
@@ -191,7 +194,7 @@ int draw() {
               pause_box.y + (pause_box.h / 2),
               0);
 
-  render_text("⇅", &PrimaryWhite,
+  render_text("⇵", &PrimaryWhite,
               flip_box.x + (flip_box.w / 2),
               flip_box.y + (flip_box.h / 2),
               0);
@@ -243,6 +246,20 @@ int draw() {
   return 1;
 }
 
+void cb(void *userdata, Uint8 *stream, int len) {
+  printf("wave_length: %d\n", wav_length);
+  /* if (wav_length == 0) */
+  /*   return; */
+
+  if (wave_length == 0) wav_length = wav
+
+  len = (len > wav_length ? wav_length : len);
+  SDL_memcpy (stream, wav_pos, len);
+
+  wav_pos += len;
+  wav_length -= len;
+}
+
 int main() {
   bool _quit;
   prev_time = time(NULL);
@@ -283,6 +300,28 @@ int main() {
     return 1;
   }
 
+  SDL_AudioSpec wav_spec;
+
+  if (SDL_LoadWAV("./assets/timer_click.wav", &wav_spec, &wav_buffer, &wav_length) == NULL) {
+    printf("SDL_LoadWAV Error: %s\n", SDL_GetError());
+    return 1;
+  }
+
+  wav_pos = wav_buffer;
+  wav_spec.callback = cb;
+  wav_spec.userdata = NULL;
+
+  if (SDL_OpenAudio(&wav_spec, NULL) < 0) {
+    printf("SDL_OpenAudio Error: %s", SDL_GetError());
+    return 1;
+  }
+
+  SDL_PauseAudio(0);
+
+  /* while (audio_len */
+  /* SDL_Delay(1000); */
+
+
   flow();
   if (!draw()) {
     printf("Unrecoverable error in draw() function. Exiting.");
@@ -298,6 +337,8 @@ int main() {
         TTF_CloseFont(timer_font);
         TTF_CloseFont(button_font);
         TTF_Quit();
+        SDL_CloseAudio();
+        SDL_FreeWAV(wav_buffer);
         SDL_DestroyWindow(window);
         SDL_Quit();
         break;
@@ -353,6 +394,7 @@ int main() {
             } else {
               mode = WHITE_RUNNING;
             }
+            wav_pos = wav_buffer;
           }
 
           if (event.button.x > top_box.x
@@ -365,6 +407,7 @@ int main() {
             } else {
               mode = BLACK_RUNNING;
             }
+            wav_pos = wav_buffer;
           }
         }
       }
