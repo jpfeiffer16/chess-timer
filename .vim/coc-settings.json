@@ -1,11 +1,12 @@
 {
     "clangd": {
         "fallbackFlags": [
-            "-I/usr/include/SDL2"
+            "-I/usr/include/SDL2",
             "-D_GNU_SOURCE=1",
             "-D_REENTRANT",
             "-L/usr/lib",
             "-lSDL2"
-        ]
-    }
+        ],
+    },
+    "inlayHint.display": false
 }
