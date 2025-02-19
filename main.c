@@ -28,8 +28,7 @@ t_mode mode = PAUSED;
 t_mode prev_mode = PAUSED;
 t_orientation orientation = WHITE_BOTTOM;
 Uint32 wav_length;
-Uint32 wav_orig_length;
-Uint8 *wav_pos;
+Uint32 wav_pos;
 Uint8 *wav_buffer;
 SDL_Color PrimaryWhite = {
   .r = 200,
@@ -227,16 +226,17 @@ int draw() {
 }
 
 void audio_cb(void *userdata, Uint8 *stream, int len) {
-  if (wav_length == 0) {
+  if (!(wav_pos < wav_length)) {
     SDL_memset(stream, 0, len);
     return;
   }
 
-  len = (len > wav_length ? wav_length : len);
-  SDL_memcpy (stream, wav_pos, len);
+  uint delta = wav_length - wav_pos;
+
+  len = (len > delta ? delta: len);
+  SDL_memcpy(stream, wav_buffer + wav_pos, len);
 
   wav_pos += len;
-  wav_length -= len;
 }
 
 int main() {
@@ -280,10 +280,7 @@ int main() {
     return 1;
   }
 
-  wav_orig_length = wav_length;
-  wav_length = 0;
-
-  wav_pos = wav_buffer;
+  wav_pos = wav_length;
   wav_spec.callback = audio_cb;
   wav_spec.userdata = NULL;
 
@@ -362,14 +359,12 @@ int main() {
             prev_mode = mode;
             if (orientation == WHITE_BOTTOM) {
               if (mode != BLACK_RUNNING) {
-                wav_length = wav_orig_length;
-                wav_pos = wav_buffer;
+                wav_pos = 0;
               }
               mode = BLACK_RUNNING;
             } else {
               if (mode != WHITE_RUNNING) {
-                wav_length = wav_orig_length;
-                wav_pos = wav_buffer;
+                wav_pos = 0;
               }
               mode = WHITE_RUNNING;
             }
@@ -382,14 +377,12 @@ int main() {
             prev_mode = mode;
             if (orientation ==  WHITE_BOTTOM) {
               if (mode != WHITE_RUNNING) {
-                wav_length = wav_orig_length;
-                wav_pos = wav_buffer;
+                wav_pos = 0;
               }
               mode = WHITE_RUNNING;
             } else {
               if (mode != BLACK_RUNNING) {
-                wav_length = wav_orig_length;
-                wav_pos = wav_buffer;
+                wav_pos = 0;
               }
               mode = BLACK_RUNNING;
             }
