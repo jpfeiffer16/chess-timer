@@ -1,0 +1,20 @@
+{
+    "configurations": {
+        "launch": {
+            "adapter": "vscode-cpptools",
+            "configuration": {
+                "name": "chess-timer: launch",
+                "type": "cppdbg",
+                "request": "launch",
+                "program": "${workspaceFolder}/bin/chess-timer",
+                "args": [],
+                "stopAtEntry": false,
+                "cwd": "${workspaceFolder}",
+                "environment": [],
+                "externalConsole": false,
+                "MIMode": "gdb",
+                "miDebuggerPath": "/usr/bin/gdb"
+            }
+        }
+    }
+}
