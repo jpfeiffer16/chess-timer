@@ -6,6 +6,10 @@
 #include <time.h>
 
 #define MIRROR 1
+#define BOUNDS_CHECK(evt, btn) evt.x > btn.x \
+                            && evt.x < btn.x + btn.w \
+                            && evt.y > btn.y \
+                            && evt.y < btn.y + btn.h
 
 typedef enum {
   WHITE_RUNNING,
@@ -214,7 +218,7 @@ int draw() {
 #else
               0
 #endif
-              );
+  );
   render_text(bottom_time, &bottom_fg,
               bottom_button.x + (bottom_button.w / 2),
               bottom_button.y + (bottom_button.h / 2),
@@ -328,10 +332,7 @@ int main() {
       }
       if (event.type == SDL_MOUSEBUTTONUP) {
         if (event.button.button == 1) { // Left click
-          if (event.button.x > pause_button.x
-           && event.button.x < pause_button.x + pause_button.w
-           && event.button.y > pause_button.y
-           && event.button.y < pause_button.y + pause_button.h) {
+          if (BOUNDS_CHECK(event.button, pause_button)) {
             t_mode cur_mode = mode;
             if (mode != PAUSED) {
               mode = PAUSED;
@@ -341,10 +342,7 @@ int main() {
             prev_mode = cur_mode;
           }
 
-          if (event.button.x > flip_button.x
-           && event.button.x < flip_button.x + flip_button.w
-           && event.button.y > flip_button.y
-           && event.button.y < flip_button.y + flip_button.h) {
+          if (BOUNDS_CHECK(event.button, flip_button)) {
             if (orientation == WHITE_BOTTOM)  {
               orientation = BLACK_BOTTOM;
             } else {
@@ -352,10 +350,7 @@ int main() {
             }
           }
 
-          if (event.button.x > bottom_button.x
-           && event.button.x < bottom_button.x + bottom_button.w
-           && event.button.y > bottom_button.y
-           && event.button.y < bottom_button.y + bottom_button.h) {
+          if (BOUNDS_CHECK(event.button, bottom_button)) {
             prev_mode = mode;
             if (orientation == WHITE_BOTTOM) {
               if (mode != BLACK_RUNNING) {
@@ -370,10 +365,7 @@ int main() {
             }
           }
 
-          if (event.button.x > top_button.x
-           && event.button.x < top_button.x + top_button.w
-           && event.button.y > top_button.y
-           && event.button.y < top_button.y + top_button.h) {
+          if (BOUNDS_CHECK(event.button, top_button)) {
             prev_mode = mode;
             if (orientation ==  WHITE_BOTTOM) {
               if (mode != WHITE_RUNNING) {
