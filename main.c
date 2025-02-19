@@ -62,10 +62,10 @@ SDL_Color PrimaryFlag = {
   .b = 30 ,
   .a = 255
 };
-SDL_Rect top_box = { 0 };
-SDL_Rect pause_box = { 0 };
-SDL_Rect flip_box = { 0 };
-SDL_Rect bottom_box = { 0 };
+SDL_Rect top_button = { 0 };
+SDL_Rect pause_button = { 0 };
+SDL_Rect flip_button = { 0 };
+SDL_Rect bottom_button = { 0 };
 
 static inline void set_render_color(SDL_Color color) {
   SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
@@ -108,25 +108,25 @@ int render_text(char str[], SDL_Color* color, int x, int y, int angle) {
 void flow() {
   const int padding = 10;
 
-  top_box.w = window_width - (padding * 2);
-  top_box.h = (window_height / 2) - 40 - (padding * 2);
-  top_box.x = padding;
-  top_box.y = padding;
+  top_button.w = window_width - (padding * 2);
+  top_button.h = (window_height / 2) - 40 - (padding * 2);
+  top_button.x = padding;
+  top_button.y = padding;
 
-  pause_box.w = (window_width / 2) - (padding + (padding / 2));
-  pause_box.h = 80;
-  pause_box.x = padding;
-  pause_box.y = (window_height / 2) - 40;
+  pause_button.w = (window_width / 2) - (padding + (padding / 2));
+  pause_button.h = 80;
+  pause_button.x = padding;
+  pause_button.y = (window_height / 2) - 40;
 
-  flip_box.w = (window_width / 2) - (padding + (padding / 2));
-  flip_box.h = 80;
-  flip_box.x = (window_width / 2) + (padding / 2);
-  flip_box.y = (window_height / 2) - 40;
+  flip_button.w = (window_width / 2) - (padding + (padding / 2));
+  flip_button.h = 80;
+  flip_button.x = (window_width / 2) + (padding / 2);
+  flip_button.y = (window_height / 2) - 40;
 
-  bottom_box.w = window_width - (padding * 2);
-  bottom_box.h = (window_height / 2) - 40 - (padding * 2);
-  bottom_box.x = padding;
-  bottom_box.y = (window_height / 2) + 40 + padding;
+  bottom_button.w = window_width - (padding * 2);
+  bottom_button.h = (window_height / 2) - 40 - (padding * 2);
+  bottom_button.x = padding;
+  bottom_button.y = (window_height / 2) + 40 + padding;
 }
 
 int draw() {
@@ -175,72 +175,52 @@ int draw() {
   }
 
   set_render_color(top_bg);
-  SDL_RenderFillRect(renderer, &top_box);
+  SDL_RenderFillRect(renderer, &top_button);
 
   set_render_color(PrimaryBlack);
-  SDL_RenderFillRect(renderer, &pause_box);
-
-
-  SDL_RenderFillRect(renderer, &flip_box);
+  SDL_RenderFillRect(renderer, &pause_button);
+  SDL_RenderFillRect(renderer, &flip_button);
 
   set_render_color(bottom_bg);
-  SDL_RenderFillRect(renderer, &bottom_box);
+  SDL_RenderFillRect(renderer, &bottom_button);
 
-  char* pause_icon = "⏸";
-  if (mode == PAUSED) {
-    pause_icon = "▶";
-  }
+  char* pause_icon = (mode == PAUSED) ? "▶" : "⏸";
   render_text(pause_icon, &PrimaryWhite,
-              pause_box.x + (pause_box.w / 2),
-              pause_box.y + (pause_box.h / 2),
+              pause_button.x + (pause_button.w / 2),
+              pause_button.y + (pause_button.h / 2),
               0);
 
   render_text("⇵", &PrimaryWhite,
-              flip_box.x + (flip_box.w / 2),
-              flip_box.y + (flip_box.h / 2),
+              flip_button.x + (flip_button.w / 2),
+              flip_button.y + (flip_button.h / 2),
               0);
 
 
   char white_time_str[6];
-  uint white_minutes = ((uint)white_timer) / 60;
-  uint white_seconds = ((uint)white_timer) % 60;
-  snprintf(white_time_str, 6, "%.2d:%.2d", white_minutes % 60, white_seconds % 60);
+  snprintf( white_time_str, 6, "%.2d:%.2d",
+    ((uint)white_timer) / 60 % 60,
+    ((uint)white_timer) % 60);
 
   char black_time_str[6];
-  uint black_minutes = ((uint)black_timer) / 60;
-  uint black_seconds = ((uint)black_timer) % 60;
-  snprintf(black_time_str, 6, "%.2d:%.2d", black_minutes % 60, black_seconds % 60);
+  snprintf(black_time_str, 6, "%.2d:%.2d",
+    ((uint)black_timer) / 60 % 60,
+    ((uint)black_timer) % 60);
 
-  if (orientation == WHITE_BOTTOM) {
-    render_text(black_time_str, &top_fg,
-                top_box.x + (top_box.w / 2),
-                top_box.y + (top_box.h / 2),
+  char *top_time = orientation == WHITE_BOTTOM ? black_time_str : white_time_str;
+  char *bottom_time = orientation == WHITE_BOTTOM ? white_time_str : black_time_str;
+  render_text(top_time, &top_fg,
+              top_button.x + (top_button.w / 2),
+              top_button.y + (top_button.h / 2),
 #ifdef MIRROR
-                180
+              180
 #else
-                0
+              0
 #endif
-                );
-    render_text(white_time_str, &bottom_fg,
-                bottom_box.x + (bottom_box.w / 2),
-                bottom_box.y + (bottom_box.h / 2),
-                0);
-
-  } else if (orientation == BLACK_BOTTOM) {
-    render_text(white_time_str, &top_fg,
-                top_box.x + (top_box.w / 2),
-                top_box.y + (top_box.h / 2),
-#ifdef MIRROR
-                180
-#else
-                0
-#endif
-                );
-    render_text(black_time_str, &bottom_fg,
-                bottom_box.x + (bottom_box.w / 2),
-                bottom_box.y + (bottom_box.h / 2),
-                0);
-  }
+              );
+  render_text(bottom_time, &bottom_fg,
+              bottom_button.x + (bottom_button.w / 2),
+              bottom_button.y + (bottom_button.h / 2),
+              0);
 
   SDL_RenderPresent(renderer);
 
@@ -321,10 +301,6 @@ int main() {
 
   SDL_PauseAudio(0);
 
-  /* while (audio_len */
-  /* SDL_Delay(1000); */
-
-
   flow();
   if (!draw()) {
     printf("Unrecoverable error in draw() function. Exiting.");
@@ -363,10 +339,10 @@ int main() {
       }
       if (event.type == SDL_MOUSEBUTTONUP) {
         if (event.button.button == 1) { // Left click
-          if (event.button.x > pause_box.x
-           && event.button.x < pause_box.x + pause_box.w
-           && event.button.y > pause_box.y
-           && event.button.y < pause_box.y + pause_box.h) {
+          if (event.button.x > pause_button.x
+           && event.button.x < pause_button.x + pause_button.w
+           && event.button.y > pause_button.y
+           && event.button.y < pause_button.y + pause_button.h) {
             t_mode cur_mode = mode;
             if (mode != PAUSED) {
               mode = PAUSED;
@@ -376,10 +352,10 @@ int main() {
             prev_mode = cur_mode;
           }
 
-          if (event.button.x > flip_box.x
-           && event.button.x < flip_box.x + flip_box.w
-           && event.button.y > flip_box.y
-           && event.button.y < flip_box.y + flip_box.h) {
+          if (event.button.x > flip_button.x
+           && event.button.x < flip_button.x + flip_button.w
+           && event.button.y > flip_button.y
+           && event.button.y < flip_button.y + flip_button.h) {
             if (orientation == WHITE_BOTTOM)  {
               orientation = BLACK_BOTTOM;
             } else {
@@ -387,10 +363,10 @@ int main() {
             }
           }
 
-          if (event.button.x > bottom_box.x
-           && event.button.x < bottom_box.x + bottom_box.w
-           && event.button.y > bottom_box.y
-           && event.button.y < bottom_box.y + bottom_box.h) {
+          if (event.button.x > bottom_button.x
+           && event.button.x < bottom_button.x + bottom_button.w
+           && event.button.y > bottom_button.y
+           && event.button.y < bottom_button.y + bottom_button.h) {
             prev_mode = mode;
             if (orientation == WHITE_BOTTOM) {
               if (mode != BLACK_RUNNING) {
@@ -407,10 +383,10 @@ int main() {
             }
           }
 
-          if (event.button.x > top_box.x
-           && event.button.x < top_box.x + top_box.w
-           && event.button.y > top_box.y
-           && event.button.y < top_box.y + top_box.h) {
+          if (event.button.x > top_button.x
+           && event.button.x < top_button.x + top_button.w
+           && event.button.y > top_button.y
+           && event.button.y < top_button.y + top_button.h) {
             prev_mode = mode;
             if (orientation ==  WHITE_BOTTOM) {
               if (mode != WHITE_RUNNING) {
