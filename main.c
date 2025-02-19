@@ -29,6 +29,7 @@ t_mode mode = PAUSED;
 t_mode prev_mode = PAUSED;
 t_orientation orientation = WHITE_BOTTOM;
 Uint32 wav_length;
+Uint32 wav_orig_length;
 Uint8 *wav_pos;
 Uint8 *wav_buffer;
 SDL_Color PrimaryWhite = {
@@ -246,12 +247,11 @@ int draw() {
   return 1;
 }
 
-void cb(void *userdata, Uint8 *stream, int len) {
-  printf("wave_length: %d\n", wav_length);
-  /* if (wav_length == 0) */
-  /*   return; */
-
-  if (wave_length == 0) wav_length = wav
+void audio_cb(void *userdata, Uint8 *stream, int len) {
+  if (wav_length == 0) {
+    SDL_memset(stream, 0, len);
+    return;
+  }
 
   len = (len > wav_length ? wav_length : len);
   SDL_memcpy (stream, wav_pos, len);
@@ -307,8 +307,11 @@ int main() {
     return 1;
   }
 
+  wav_orig_length = wav_length;
+  wav_length = 0;
+
   wav_pos = wav_buffer;
-  wav_spec.callback = cb;
+  wav_spec.callback = audio_cb;
   wav_spec.userdata = NULL;
 
   if (SDL_OpenAudio(&wav_spec, NULL) < 0) {
@@ -390,11 +393,18 @@ int main() {
            && event.button.y < bottom_box.y + bottom_box.h) {
             prev_mode = mode;
             if (orientation == WHITE_BOTTOM) {
+              if (mode != BLACK_RUNNING) {
+                wav_length = wav_orig_length;
+                wav_pos = wav_buffer;
+              }
               mode = BLACK_RUNNING;
             } else {
+              if (mode != WHITE_RUNNING) {
+                wav_length = wav_orig_length;
+                wav_pos = wav_buffer;
+              }
               mode = WHITE_RUNNING;
             }
-            wav_pos = wav_buffer;
           }
 
           if (event.button.x > top_box.x
@@ -403,11 +413,18 @@ int main() {
            && event.button.y < top_box.y + top_box.h) {
             prev_mode = mode;
             if (orientation ==  WHITE_BOTTOM) {
+              if (mode != WHITE_RUNNING) {
+                wav_length = wav_orig_length;
+                wav_pos = wav_buffer;
+              }
               mode = WHITE_RUNNING;
             } else {
+              if (mode != BLACK_RUNNING) {
+                wav_length = wav_orig_length;
+                wav_pos = wav_buffer;
+              }
               mode = BLACK_RUNNING;
             }
-            wav_pos = wav_buffer;
           }
         }
       }
