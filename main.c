@@ -17,8 +17,7 @@ typedef enum {
   BLACK_BOTTOM,
 } t_orientation;
 
-TTF_Font* timer_font;
-TTF_Font* button_font;
+TTF_Font* font;
 SDL_Renderer* renderer;
 int window_width = 400;
 int window_height = 600;
@@ -73,7 +72,7 @@ static inline void set_render_color(SDL_Color color) {
 
 int render_text(char str[], SDL_Color* color, int x, int y, int angle) {
   SDL_Surface* s_timer = TTF_RenderUTF8_Solid(
-    timer_font,
+    font,
     str,
     *color);
   SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, s_timer);
@@ -85,7 +84,7 @@ int render_text(char str[], SDL_Color* color, int x, int y, int angle) {
 
   int width, height;
 
-  if (TTF_SizeText(timer_font, str, &width, &height) == -1) {
+  if (TTF_SizeText(font, str, &width, &height) == -1) {
     printf("TFF_SizeFont Error: %s\n", TTF_GetError());
     return 0;
   }
@@ -268,14 +267,8 @@ int main() {
   }
 
   TTF_Init();
-  timer_font = TTF_OpenFont("./assets/Monocraft.ttf", 80);
-  if (timer_font == NULL) {
-    printf("TTF_OpenFont Error: %s\n", TTF_GetError());
-    return 1;
-  }
-
-  button_font = TTF_OpenFont("./assets/Monocraft.ttf", 80);
-  if (timer_font == NULL) {
+  font = TTF_OpenFont("./assets/Monocraft.ttf", 80);
+  if (font == NULL) {
     printf("TTF_OpenFont Error: %s\n", TTF_GetError());
     return 1;
   }
@@ -313,8 +306,7 @@ int main() {
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT) {
         _quit = true;
-        TTF_CloseFont(timer_font);
-        TTF_CloseFont(button_font);
+        TTF_CloseFont(font);
         TTF_Quit();
         SDL_CloseAudio();
         SDL_FreeWAV(wav_buffer);
