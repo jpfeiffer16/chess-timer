@@ -1,0 +1,57 @@
+#include <SDL.h>
+#include <SDL_render.h>
+#include <SDL_ttf.h>
+
+#ifndef gfx_loaded
+#define BOUNDS_CHECK(evt, btn) evt.x > btn.x \
+                            && evt.x < btn.x + btn.w \
+                            && evt.y > btn.y \
+                            && evt.y < btn.y + btn.h
+
+static inline void set_render_color(SDL_Renderer* renderer, SDL_Color color) {
+  SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+}
+
+int render_text(
+  SDL_Renderer* renderer,
+  TTF_Font* font,
+  char str[],
+  SDL_Color color,
+  int x,
+  int y,
+  int angle
+) {
+  SDL_Surface* s_timer = TTF_RenderUTF8_Solid(
+    font,
+    str,
+    color);
+  SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, s_timer);
+
+  SDL_FreeSurface(s_timer);
+  if (!s_timer) {
+    return 0;
+  }
+
+  int width, height;
+
+  if (TTF_SizeText(font, str, &width, &height) == -1) {
+    printf("TFF_SizeFont Error: %s\n", TTF_GetError());
+    return 0;
+  }
+
+  if (SDL_RenderCopyEx(renderer, texture, NULL, &(SDL_Rect){
+    .w = width,
+    .h = height,
+    .x = x - (width / 2),
+    .y = y - (height / 2),
+  }, angle, NULL, SDL_FLIP_NONE) == -1) {
+    printf("SDL_RenderCopyEx error: unable to render text: %s", SDL_GetError());
+    return 0;
+  }
+
+  SDL_DestroyTexture(texture);
+
+  return 1;
+}
+#endif
+#define gfx_loaded
