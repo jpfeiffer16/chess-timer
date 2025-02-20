@@ -18,10 +18,23 @@ int time_input_draw() {
   set_render_color(renderer, SecondaryBlack);
   SDL_RenderClear(renderer);
 
-  if (SDL_RenderDrawRect(renderer, &sight) < 0) {
-    printf("SDL_RenderDrawRect Error: %s\n", SDL_GetError());
-    return -1;
+  set_render_color(renderer, PrimaryWhite);
+  SDL_Rect sliding_sight = sight;
+  for (uint i = 0; i < 10; i++) {
+    sliding_sight.x++;
+    sliding_sight.y++;
+    sliding_sight.w -= 2;
+    sliding_sight.h -= 2;
+    if (SDL_RenderDrawRect(renderer, &sliding_sight) < 0) {
+      printf("SDL_RenderDrawRect Error: %s\n", SDL_GetError());
+      return -1;
+    }
   }
+
+  /* if (SDL_RenderFillRect(renderer, &minutes_wheel) < 0) { */
+  /*   printf("SDL_RenderFillRect Error: %s\n", SDL_GetError()); */
+  /*   return -1; */
+  /* } */
 
   SDL_RenderPresent(renderer);
 
@@ -52,6 +65,9 @@ time_t time_input(SDL_Window* window) {
     return 1;
   }
 
+  time_input_flow();
+  time_input_draw();
+
   SDL_Event event;
   while(true) {
     SDL_Delay(50);
@@ -61,10 +77,14 @@ time_t time_input(SDL_Window* window) {
         return 0;
       }
       if (event.type == SDL_WINDOWEVENT) {
-        if (event.type == SDL_WINDOWEVENT_EXPOSED) {
+        if (event.window.event == SDL_WINDOWEVENT_EXPOSED) {
           time_input_draw();
         }
-        if (event.type == SDL_WINDOWEVENT_RESIZED || event.type == SDL_WINDOWEVENT_SIZE_CHANGED) {
+        if ( event.window.event == SDL_WINDOWEVENT_RESIZED
+          || event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED
+        ) {
+          window_width = event.window.data1;
+          window_height = event.window.data2;
           time_input_flow();
           time_input_draw();
         }

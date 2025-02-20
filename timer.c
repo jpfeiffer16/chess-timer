@@ -227,8 +227,8 @@ int timer_ui(SDL_Window* window, time_t clock_time) {
         break;
       }
       if (event.type == SDL_WINDOWEVENT) {
-        if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED
-         || event.window.type == SDL_WINDOWEVENT_RESIZED) {
+        if ( event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED
+          || event.window.event == SDL_WINDOWEVENT_RESIZED) {
           window_width = event.window.data1;
           window_height = event.window.data2;
           timer_flow();
