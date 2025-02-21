@@ -4,17 +4,59 @@
 #include <SDL_video.h>
 #include <stdbool.h>
 #include <time.h>
+#include <assert.h>
 #include "layout.h"
 #include "gfx.c"
 
+typedef enum {
+  DRAGGING_SECONDS,
+  DRAGGING_MINUTES,
+  NORMAL
+} t_drag_state;
+
+typedef struct {
+  SDL_Texture* texture;
+  uint width;
+  uint height;
+} t_time_part;
+
 extern TTF_Font* font;
+extern int window_width;
+extern int window_height;
+
 SDL_Renderer* renderer;
 SDL_Rect sight = { 0 };
 SDL_Rect minutes_wheel = { 0 };
 SDL_Rect seconds_wheel = { 0 };
 SDL_Rect submit_button = { 0 };
-extern int window_width;
-extern int window_height;
+t_time_part time_parts[60] = { 0 };
+int minutes_offset = 0;
+int seconds_offset = 0;
+t_drag_state drag_state = NORMAL;
+uint max_glyph_width = 0;
+uint max_glyph_height = 0;
+uint sight_thickness = 10;
+
+t_time_part init_text(char* str) {
+  t_time_part part = { 0 };
+
+  int width, height;
+
+  int size_result = TTF_SizeText(font, str, &width, &height);
+  assert(size_result != -1);
+
+  part.width = width;
+  part.height = height;
+
+  SDL_Surface* sfc = TTF_RenderUTF8_Solid(font, str, PrimaryWhite);
+  assert(sfc != NULL);
+
+  SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, sfc);
+  assert(texture != NULL);
+  part.texture = texture;
+
+  return part;
+}
 
 int time_input_draw() {
   set_render_color(renderer, SecondaryBlack);
@@ -40,9 +82,20 @@ int time_input_draw() {
               submit_button.x + (submit_button.w / 2),
               submit_button.y + (submit_button.h / 2), 0);
 
+  for (uint i = 0; i < 60; i++) {
+    t_time_part part = time_parts[i];
+    int y = (sight.y + sight_thickness + (i * max_glyph_height) + seconds_offset) % (seconds_wheel.y + seconds_wheel.h);
+    SDL_RenderCopy(renderer, part.texture, NULL, &(SDL_Rect) {
+      .x = (window_width / 2) + (padding / 2),
+      .y = y,
+      .w = part.width,
+      .h = part.height
+    });
+  }
+
   set_render_color(renderer, PrimaryWhite);
   SDL_Rect sliding_sight = sight;
-  for (uint i = 0; i < 10; i++) {
+  for (uint i = 0; i < sight_thickness; i++) {
     sliding_sight.x++;
     sliding_sight.y++;
     sliding_sight.w -= 2;
@@ -62,10 +115,10 @@ int time_input_draw() {
 void time_input_flow() {
   uint button_section = window_height - (80 + padding + (padding / 2));
 
-  sight.x = padding;
+  sight.x = (window_width / 2) - ((padding * 3) / 2) - max_glyph_width - padding - sight_thickness;
   sight.y = (button_section / 2) - 40;
-  sight.w = window_width - (padding * 2);
-  sight.h = 80;
+  sight.w = (max_glyph_width * 2) + (padding * 3) + (sight_thickness * 2);
+  sight.h = max_glyph_height + (sight_thickness * 2);
 
   minutes_wheel.x = padding;
   minutes_wheel.y = padding;
@@ -90,6 +143,15 @@ time_t time_input(SDL_Window* window) {
     return 1;
   }
 
+  for (uint i = 0; i < 60; i++) {
+    char str[3];
+    snprintf(str, 3, "%.2d", i);
+    t_time_part part = init_text(str);
+    if (part.width > max_glyph_width) max_glyph_width = part.width;
+    if (part.height > max_glyph_height) max_glyph_height = part.height;
+    time_parts[i] = part;
+  }
+
   time_input_flow();
   time_input_draw();
 
@@ -99,6 +161,9 @@ time_t time_input(SDL_Window* window) {
     while(SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT) {
         SDL_DestroyRenderer(renderer);
+        for (uint i = 0; i < 60; i++) {
+          SDL_DestroyTexture(time_parts[i].texture);
+        }
         return 0;
       }
       if (event.type == SDL_WINDOWEVENT) {
@@ -112,6 +177,26 @@ time_t time_input(SDL_Window* window) {
           window_height = event.window.data2;
           time_input_flow();
           time_input_draw();
+        }
+      }
+      if (event.type == SDL_MOUSEBUTTONDOWN) {
+        if (event.button.button == 1) {
+          if(BOUNDS_CHECK(event.button, seconds_wheel)) {
+            drag_state = DRAGGING_SECONDS;
+          }
+        }
+      }
+      if (event.type == SDL_MOUSEBUTTONUP) {
+        if (event.button.button == 1) {
+          drag_state = NORMAL;
+        }
+      }
+      if (event.type == SDL_MOUSEMOTION) {
+        if (drag_state == DRAGGING_SECONDS) {
+          seconds_offset += event.motion.yrel;
+        }
+        if (drag_state == DRAGGING_MINUTES) {
+          minutes_offset += event.motion.yrel;
         }
       }
     }
