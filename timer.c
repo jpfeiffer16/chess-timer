@@ -19,7 +19,7 @@ typedef enum {
   BLACK_BOTTOM,
 } t_orientation;
 
-TTF_Font* font;
+extern TTF_Font* font;
 SDL_Renderer* renderer;
 extern int window_width;
 extern int window_height;
@@ -228,7 +228,7 @@ int timer_ui(SDL_Window* window, time_t clock_time) {
       }
       if (event.type == SDL_WINDOWEVENT) {
         if ( event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED
-          || event.window.event == SDL_WINDOWEVENT_RESIZED) {
+         || event.window.type == SDL_WINDOWEVENT_RESIZED) {
           window_width = event.window.data1;
           window_height = event.window.data2;
           timer_flow();

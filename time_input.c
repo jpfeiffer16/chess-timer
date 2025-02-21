@@ -7,16 +7,38 @@
 #include "layout.h"
 #include "gfx.c"
 
+extern TTF_Font* font;
 SDL_Renderer* renderer;
 SDL_Rect sight = { 0 };
 SDL_Rect minutes_wheel = { 0 };
 SDL_Rect seconds_wheel = { 0 };
+SDL_Rect submit_button = { 0 };
 extern int window_width;
 extern int window_height;
 
 int time_input_draw() {
   set_render_color(renderer, SecondaryBlack);
   SDL_RenderClear(renderer);
+
+  set_render_color(renderer, PrimaryBlack);
+  if (SDL_RenderFillRect(renderer, &minutes_wheel) < 0) {
+    printf("SDL_RenderFillRect Error: %s\n", SDL_GetError());
+    return -1;
+  }
+
+  if (SDL_RenderFillRect(renderer, &seconds_wheel) < 0) {
+    printf("SDL_RenderFillRect Error: %s\n", SDL_GetError());
+    return -1;
+  }
+
+  if (SDL_RenderFillRect(renderer, &submit_button) < 0) {
+    printf("SDL_RenderFillRect Error: %s\n", SDL_GetError());
+    return -1;
+  }
+
+  render_text(renderer, font, "✔", PrimaryWhite,
+              submit_button.x + (submit_button.w / 2),
+              submit_button.y + (submit_button.h / 2), 0);
 
   set_render_color(renderer, PrimaryWhite);
   SDL_Rect sliding_sight = sight;
@@ -31,10 +53,6 @@ int time_input_draw() {
     }
   }
 
-  /* if (SDL_RenderFillRect(renderer, &minutes_wheel) < 0) { */
-  /*   printf("SDL_RenderFillRect Error: %s\n", SDL_GetError()); */
-  /*   return -1; */
-  /* } */
 
   SDL_RenderPresent(renderer);
 
@@ -42,20 +60,27 @@ int time_input_draw() {
 }
 
 void time_input_flow() {
+  uint button_section = window_height - (80 + padding + (padding / 2));
+
   sight.x = padding;
-  sight.y = (window_height / 2) - 40;
+  sight.y = (button_section / 2) - 40;
   sight.w = window_width - (padding * 2);
   sight.h = 80;
 
   minutes_wheel.x = padding;
   minutes_wheel.y = padding;
   minutes_wheel.w = (window_width / 2) - (padding + (padding / 2));
-  minutes_wheel.h = window_height - (padding * 2);
+  minutes_wheel.h = button_section - (padding + (padding / 2));
 
-  minutes_wheel.x = (window_width / 2) + (padding * 2);
-  minutes_wheel.y = padding;
-  minutes_wheel.w = (window_width / 2) - (padding / 2);
-  minutes_wheel.h = window_height - (padding * 2);
+  seconds_wheel.x = (window_width / 2) + (padding / 2);
+  seconds_wheel.y = padding;
+  seconds_wheel.w = (window_width / 2) - (padding + (padding / 2));
+  seconds_wheel.h = button_section - (padding + (padding / 2));
+
+  submit_button.x = padding;
+  submit_button.y = button_section + (padding / 2);
+  submit_button.w = window_width - (padding * 2);
+  submit_button.h = 80;
 }
 
 time_t time_input(SDL_Window* window) {
