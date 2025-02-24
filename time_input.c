@@ -33,9 +33,9 @@ t_time_part time_parts[60] = { 0 };
 int minutes_offset = 0;
 int seconds_offset = 0;
 t_drag_state drag_state = NORMAL;
-uint max_glyph_width = 0;
-uint max_glyph_height = 0;
-uint sight_thickness = 10;
+int max_glyph_width = 0;
+int max_glyph_height = 0;
+int sight_thickness = 10;
 
 t_time_part init_text(char* str) {
   t_time_part part = { 0 };
@@ -82,11 +82,19 @@ int time_input_draw() {
               submit_button.x + (submit_button.w / 2),
               submit_button.y + (submit_button.h / 2), 0);
 
-  for (uint i = 0; i < 60; i++) {
+  int total_height = max_glyph_height * 60;
+
+  for (int i = 0; i < 60; i++) {
     t_time_part part = time_parts[i];
-    int y = (sight.y + sight_thickness + (i * max_glyph_height) + seconds_offset) % (seconds_wheel.y + seconds_wheel.h);
+    /* int y = (((i * max_glyph_height) + seconds_offset)) % total_height; */
+    int y = 0;
+    if (seconds_offset > 0) {
+      y = (((i * max_glyph_height) + seconds_offset) % total_height);
+    } else {
+      y = (((i * max_glyph_height) + seconds_offset) % total_height);
+    }
     SDL_RenderCopy(renderer, part.texture, NULL, &(SDL_Rect) {
-      .x = (window_width / 2) + (padding / 2),
+      .x = (window_width / 2) + (padding / 2) + i,
       .y = y,
       .w = part.width,
       .h = part.height
