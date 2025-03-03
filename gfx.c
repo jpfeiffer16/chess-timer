@@ -3,10 +3,15 @@
 #include <SDL_ttf.h>
 
 #ifndef gfx_loaded
-#define BOUNDS_CHECK(evt, btn) evt.x > btn.x \
+#define EVT_BOUNDS_CHECK(evt, btn) (evt.x > btn.x \
                             && evt.x < btn.x + btn.w \
                             && evt.y > btn.y \
-                            && evt.y < btn.y + btn.h
+                            && evt.y < btn.y + btn.h)
+
+#define PNT_BOUNDS_CHECK(x, y, bounds) (x > bounds.x \
+                            && x < bounds.x + bounds.w \
+                            && y > bounds.y \
+                            && y < bounds.y + bounds.h)
 
 static inline void set_render_color(SDL_Renderer* renderer, SDL_Color color) {
   SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);

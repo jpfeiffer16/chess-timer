@@ -8,6 +8,8 @@
 #include "layout.h"
 #include "gfx.c"
 
+#define MIN(a, b) (a < b ? a : b)
+
 typedef enum {
   DRAGGING_SECONDS,
   DRAGGING_MINUTES,
@@ -32,6 +34,7 @@ SDL_Rect submit_button = { 0 };
 t_time_part time_parts[60] = { 0 };
 int minutes_offset = 0;
 int seconds_offset = 0;
+int selected_seconds = 0;
 t_drag_state drag_state = NORMAL;
 int max_glyph_width = 0;
 int max_glyph_height = 0;
@@ -58,6 +61,12 @@ t_time_part init_text(char* str) {
   return part;
 }
 
+void set_time_part(int* offset, int time_part) {
+  printf("setting time_part\n");
+  *offset = sight.y + sight_thickness - (time_part * (max_glyph_height + sight_thickness));
+  printf("%d\n", *offset);
+}
+
 int time_input_draw() {
   set_render_color(renderer, SecondaryBlack);
   SDL_RenderClear(renderer);
@@ -82,26 +91,30 @@ int time_input_draw() {
               submit_button.x + (submit_button.w / 2),
               submit_button.y + (submit_button.h / 2), 0);
 
-  int total_height = max_glyph_height * 60;
+  /* int total_height = max_glyph_height * 60; */
 
   for (int i = 0; i < 60; i++) {
     t_time_part part = time_parts[i];
-    /* int y = (((i * max_glyph_height) + seconds_offset)) % total_height; */
-    int y = 0;
-    if (seconds_offset > 0) {
-      y = (((i * max_glyph_height) + seconds_offset) % total_height);
-    } else {
-      y = (((i * max_glyph_height) + seconds_offset) % total_height);
-    }
+
+    int y = i * (max_glyph_height + sight_thickness) + seconds_offset;
+
     SDL_RenderCopy(renderer, part.texture, NULL, &(SDL_Rect) {
-      .x = (window_width / 2) + (padding / 2) + i,
+      .x = (window_width / 2) + (padding / 2) + (padding),
       .y = y,
       .w = part.width,
       .h = part.height
     });
+
+    /* set_render_color(renderer, PrimaryWhite); */
+    /* SDL_RenderDrawRect(renderer, &(SDL_Rect){ */
+    /*   .x = (window_width / 2) + (padding / 2), */
+    /*   .y = y, */
+    /*   .w = part.width, */
+    /*   .h = part.height */
+    /* });  */
   }
 
-  set_render_color(renderer, PrimaryWhite);
+  set_render_color(renderer, PrimaryWarning);
   SDL_Rect sliding_sight = sight;
   for (uint i = 0; i < sight_thickness; i++) {
     sliding_sight.x++;
@@ -114,6 +127,8 @@ int time_input_draw() {
     }
   }
 
+  render_text(renderer, font, ":", PrimaryWhite,
+              window_width / 2 + 3, seconds_wheel.y + (seconds_wheel.h / 2), 0);
 
   SDL_RenderPresent(renderer);
 
@@ -125,17 +140,17 @@ void time_input_flow() {
 
   sight.x = (window_width / 2) - ((padding * 3) / 2) - max_glyph_width - padding - sight_thickness;
   sight.y = (button_section / 2) - 40;
-  sight.w = (max_glyph_width * 2) + (padding * 3) + (sight_thickness * 2);
+  sight.w = (max_glyph_width * 2) + (padding * 5) + (sight_thickness * 2);
   sight.h = max_glyph_height + (sight_thickness * 2);
 
-  minutes_wheel.x = padding;
+  minutes_wheel.x = sight.x + sight_thickness;
   minutes_wheel.y = padding;
-  minutes_wheel.w = (window_width / 2) - (padding + (padding / 2));
+  minutes_wheel.w = max_glyph_width + (padding * 2);
   minutes_wheel.h = button_section - (padding + (padding / 2));
 
-  seconds_wheel.x = (window_width / 2) + (padding / 2);
+  seconds_wheel.x = (window_width / 2) + (padding);
   seconds_wheel.y = padding;
-  seconds_wheel.w = (window_width / 2) - (padding + (padding / 2));
+  seconds_wheel.w = max_glyph_width + (padding * 2);
   seconds_wheel.h = button_section - (padding + (padding / 2));
 
   submit_button.x = padding;
@@ -186,19 +201,45 @@ time_t time_input(SDL_Window* window) {
           time_input_flow();
           time_input_draw();
         }
+        set_time_part(&seconds_offset, selected_seconds);
       }
+
       if (event.type == SDL_MOUSEBUTTONDOWN) {
         if (event.button.button == 1) {
-          if(BOUNDS_CHECK(event.button, seconds_wheel)) {
+          if(EVT_BOUNDS_CHECK(event.button, seconds_wheel)) {
             drag_state = DRAGGING_SECONDS;
           }
         }
       }
+
       if (event.type == SDL_MOUSEBUTTONUP) {
         if (event.button.button == 1) {
+          if (drag_state == DRAGGING_SECONDS) {
+            /* seconds_offset = round(((double)seconds_offset / max_glyph_height)) * max_glyph_height; */
+            int x = sight.x + sight_thickness;
+            int max_overlap = 0;
+            for (int j = 0; j < 60; j++) {
+              int y = j * (max_glyph_height + sight_thickness) + seconds_offset;
+              if ((PNT_BOUNDS_CHECK(x, y, sight))
+               || (PNT_BOUNDS_CHECK(x, y + max_glyph_height, sight))) {
+                
+                int overlap_top = (y + max_glyph_height) - sight.y;
+                int overlap_bottom = (sight.y + sight.h) - y;
+                printf("i: %d, t: %d, b: %d, total: %d\n", j, overlap_top, overlap_bottom, MIN(overlap_top, overlap_bottom));
+                int overlap = MIN(overlap_top, overlap_bottom);
+                if (overlap > max_overlap) {
+                  max_overlap = overlap;
+                  selected_seconds = j;
+                }
+              }
+            }
+            printf("max: %d, selected_idx: %d\n", max_overlap, selected_seconds);
+            set_time_part(&seconds_offset, selected_seconds);
+          }
           drag_state = NORMAL;
         }
       }
+
       if (event.type == SDL_MOUSEMOTION) {
         if (drag_state == DRAGGING_SECONDS) {
           seconds_offset += event.motion.yrel;

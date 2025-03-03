@@ -243,7 +243,7 @@ int timer_ui(SDL_Window* window, time_t clock_time) {
       }
       if (event.type == SDL_MOUSEBUTTONUP) {
         if (event.button.button == 1) { // Left click
-          if (BOUNDS_CHECK(event.button, pause_button)) {
+          if (EVT_BOUNDS_CHECK(event.button, pause_button)) {
             t_mode cur_mode = mode;
             if (mode != PAUSED) {
               mode = PAUSED;
@@ -253,7 +253,7 @@ int timer_ui(SDL_Window* window, time_t clock_time) {
             prev_mode = cur_mode;
           }
 
-          if (BOUNDS_CHECK(event.button, flip_button)) {
+          if (EVT_BOUNDS_CHECK(event.button, flip_button)) {
             if (orientation == WHITE_BOTTOM)  {
               orientation = BLACK_BOTTOM;
             } else {
@@ -261,7 +261,7 @@ int timer_ui(SDL_Window* window, time_t clock_time) {
             }
           }
 
-          if (BOUNDS_CHECK(event.button, bottom_button)) {
+          if (EVT_BOUNDS_CHECK(event.button, bottom_button)) {
             prev_mode = mode;
             if (orientation == WHITE_BOTTOM) {
               if (mode != BLACK_RUNNING) {
@@ -276,7 +276,7 @@ int timer_ui(SDL_Window* window, time_t clock_time) {
             }
           }
 
-          if (BOUNDS_CHECK(event.button, top_button)) {
+          if (EVT_BOUNDS_CHECK(event.button, top_button)) {
             prev_mode = mode;
             if (orientation ==  WHITE_BOTTOM) {
               if (mode != WHITE_RUNNING) {
