@@ -34,6 +34,7 @@ SDL_Rect submit_button = { 0 };
 t_time_part time_parts[60] = { 0 };
 int minutes_offset = 0;
 int seconds_offset = 0;
+int selected_minutes = 0;
 int selected_seconds = 0;
 t_drag_state drag_state = NORMAL;
 int max_glyph_width = 0;
@@ -80,7 +81,18 @@ int time_input_draw() {
     return -1;
   }
 
-  /* int total_height = max_glyph_height * 60; */
+  for (int i = 0; i < 60; i++) {
+    t_time_part part = time_parts[i];
+
+    int y = i * (max_glyph_height + sight_thickness) + minutes_offset;
+
+    SDL_RenderCopy(renderer, part.texture, NULL, &(SDL_Rect) {
+      .x = minutes_wheel.x,
+      .y = y,
+      .w = part.width,
+      .h = part.height
+    });
+  }
 
   for (int i = 0; i < 60; i++) {
     t_time_part part = time_parts[i];
@@ -210,11 +222,15 @@ time_t time_input(SDL_Window* window) {
           time_input_flow();
           time_input_draw();
         }
+        set_time_part(&minutes_offset, selected_minutes);
         set_time_part(&seconds_offset, selected_seconds);
       }
 
       if (event.type == SDL_MOUSEBUTTONDOWN) {
         if (event.button.button == 1) {
+          if(EVT_BOUNDS_CHECK(event.button, minutes_wheel)) {
+            drag_state = DRAGGING_MINUTES;
+          }
           if(EVT_BOUNDS_CHECK(event.button, seconds_wheel)) {
             drag_state = DRAGGING_SECONDS;
           }
@@ -223,24 +239,33 @@ time_t time_input(SDL_Window* window) {
 
       if (event.type == SDL_MOUSEBUTTONUP) {
         if (event.button.button == 1) {
+          int *selected;
+          int *offset;
           if (drag_state == DRAGGING_SECONDS) {
-            int x = sight.x + sight_thickness;
-            int max_overlap = 0;
-            for (int j = 0; j < 60; j++) {
-              int y = j * (max_glyph_height + sight_thickness) + seconds_offset;
-              if ((PNT_BOUNDS_CHECK(x, y, sight))
-               || (PNT_BOUNDS_CHECK(x, (y + max_glyph_height), sight))) {
-                int overlap_top = (y + max_glyph_height) - sight.y;
-                int overlap_bottom = (sight.y + sight.h) - y;
-                int overlap = MIN(overlap_top, overlap_bottom);
-                if (overlap > max_overlap) {
-                  max_overlap = overlap;
-                  selected_seconds = j;
-                }
+            selected = &selected_seconds;
+            offset = &seconds_offset;
+          } else if (drag_state == DRAGGING_MINUTES) {
+            selected = &selected_minutes;
+            offset = &minutes_offset;
+          }
+
+          int x = sight.x + sight_thickness;
+          int max_overlap = 0;
+          for (int j = 0; j < 60; j++) {
+            int y = j * (max_glyph_height + sight_thickness) + *offset;
+            if ((PNT_BOUNDS_CHECK(x, y, sight))
+             || (PNT_BOUNDS_CHECK(x, (y + max_glyph_height), sight))) {
+              int overlap_top = (y + max_glyph_height) - sight.y;
+              int overlap_bottom = (sight.y + sight.h) - y;
+              int overlap = MIN(overlap_top, overlap_bottom);
+              if (overlap > max_overlap) {
+                max_overlap = overlap;
+                *selected = j;
               }
             }
-            set_time_part(&seconds_offset, selected_seconds);
           }
+          set_time_part(offset, *selected);
+
           drag_state = NORMAL;
         }
       }
