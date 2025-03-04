@@ -8,10 +8,10 @@
                             && evt.y > btn.y \
                             && evt.y < btn.y + btn.h)
 
-#define PNT_BOUNDS_CHECK(x, y, bounds) (x > bounds.x \
-                            && x < bounds.x + bounds.w \
-                            && y > bounds.y \
-                            && y < bounds.y + bounds.h)
+#define PNT_BOUNDS_CHECK(x_pnt, y_pnt, bounds) (x_pnt > bounds.x \
+                            && x_pnt < bounds.x + bounds.w \
+                            && y_pnt > bounds.y \
+                            && y_pnt < bounds.y + bounds.h)
 
 static inline void set_render_color(SDL_Renderer* renderer, SDL_Color color) {
   SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
