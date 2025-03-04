@@ -31,21 +31,21 @@ int main() {
     return 1;
   }
 
-  while (true) {
-    time_input(window);
+  time_t time = time_input(window);
+  if (!time) {
     TTF_CloseFont(font);
     TTF_Quit();
     SDL_DestroyWindow(window);
     SDL_Quit();
     return 0;
+  }
 
-    int ret = timer_ui(window, 30 * 60);
-    if (!ret) {
-      TTF_CloseFont(font);
-      TTF_Quit();
-      SDL_DestroyWindow(window);
-      SDL_Quit();
-      return 0;
-    }
+  int ret = timer_ui(window, time);
+  if (!ret) {
+    TTF_CloseFont(font);
+    TTF_Quit();
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+    return 0;
   }
 }
