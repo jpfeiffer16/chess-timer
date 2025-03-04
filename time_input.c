@@ -82,15 +82,6 @@ int time_input_draw() {
     return -1;
   }
 
-  if (SDL_RenderFillRect(renderer, &submit_button) < 0) {
-    printf("SDL_RenderFillRect Error: %s\n", SDL_GetError());
-    return -1;
-  }
-
-  render_text(renderer, font, "✔", PrimaryWhite,
-              submit_button.x + (submit_button.w / 2),
-              submit_button.y + (submit_button.h / 2), 0);
-
   /* int total_height = max_glyph_height * 60; */
 
   for (int i = 0; i < 60; i++) {
@@ -129,6 +120,32 @@ int time_input_draw() {
 
   render_text(renderer, font, ":", PrimaryWhite,
               window_width / 2 + 3, seconds_wheel.y + (seconds_wheel.h / 2), 0);
+
+  set_render_color(renderer, SecondaryBlack);
+  SDL_RenderFillRect(renderer, &(SDL_Rect){
+    .x = 0,
+    .y = 0,
+    .w = window_width,
+    .h = padding
+  });
+  int bottom_blank_y = seconds_wheel.y + seconds_wheel.h;
+  SDL_RenderFillRect(renderer, &(SDL_Rect){
+    .x = 0,
+    .y = bottom_blank_y,
+    .w = window_width,
+    .h = window_height - bottom_blank_y
+  });
+
+  set_render_color(renderer, PrimaryBlack);
+  if (SDL_RenderFillRect(renderer, &submit_button) < 0) {
+    printf("SDL_RenderFillRect Error: %s\n", SDL_GetError());
+    return -1;
+  }
+
+  render_text(renderer, font, "✔", PrimaryWhite,
+              submit_button.x + (submit_button.w / 2),
+              submit_button.y + (submit_button.h / 2), 0);
+
 
   SDL_RenderPresent(renderer);
 
