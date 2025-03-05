@@ -41,12 +41,11 @@ int max_glyph_width = 0;
 int max_glyph_height = 0;
 int sight_thickness = 10;
 
-
 void cleanup() {
-  SDL_DestroyRenderer(renderer);
-  for (uint i = 0; i < 60; i++) {
+  for (int i = 0; i < 60; i++) {
     SDL_DestroyTexture(time_parts[i].texture);
   }
+  SDL_DestroyRenderer(renderer);
 }
 
 t_time_part init_text(char* str) {
