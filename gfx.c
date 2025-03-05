@@ -50,7 +50,7 @@ int render_text(
     .x = x - (width / 2),
     .y = y - (height / 2),
   }, angle, NULL, SDL_FLIP_NONE) == -1) {
-    printf("SDL_RenderCopyEx error: unable to render text: %s", SDL_GetError());
+    printf("SDL_RenderCopyEx Error: unable to render text: %s\n", SDL_GetError());
     return 0;
   }
 

@@ -32,7 +32,7 @@ int main() {
   }
 
   time_t time = time_input(window);
-  if (!time) {
+  if (time < 0) {
     TTF_CloseFont(font);
     TTF_Quit();
     SDL_DestroyWindow(window);
@@ -40,12 +40,11 @@ int main() {
     return 0;
   }
 
-  int ret = timer_ui(window, time);
-  if (!ret) {
-    TTF_CloseFont(font);
-    TTF_Quit();
-    SDL_DestroyWindow(window);
-    SDL_Quit();
-    return 0;
-  }
+  timer_ui(window, time);
+
+  TTF_CloseFont(font);
+  TTF_Quit();
+  SDL_DestroyWindow(window);
+  SDL_Quit();
+  return 0;
 }

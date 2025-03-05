@@ -94,12 +94,15 @@ int time_input_draw() {
 
     int y = i * (max_glyph_height + sight_thickness) + minutes_offset;
 
-    SDL_RenderCopy(renderer, part.texture, NULL, &(SDL_Rect) {
+    if (SDL_RenderCopy(renderer, part.texture, NULL, &(SDL_Rect) {
       .x = minutes_wheel.x,
       .y = y,
       .w = part.width,
       .h = part.height
-    });
+    }) < 0) {
+      printf("SDL_RenderCopy Error: %s\n", SDL_GetError());
+      return -1;
+    }
   }
 
   for (int i = 0; i < 60; i++) {
@@ -107,12 +110,14 @@ int time_input_draw() {
 
     int y = i * (max_glyph_height + sight_thickness) + seconds_offset;
 
-    SDL_RenderCopy(renderer, part.texture, NULL, &(SDL_Rect) {
+    if (SDL_RenderCopy(renderer, part.texture, NULL, &(SDL_Rect) {
       .x = (window_width / 2) + (padding / 2) + (padding),
       .y = y,
       .w = part.width,
       .h = part.height
-    });
+    }) < 0) {
+      printf("SDL_RenderCopy Error: %s\n", SDL_GetError());
+    }
   }
 
   set_render_color(renderer, PrimaryWarning);
@@ -132,19 +137,25 @@ int time_input_draw() {
               window_width / 2 + 3, seconds_wheel.y + (seconds_wheel.h / 2), 0);
 
   set_render_color(renderer, SecondaryBlack);
-  SDL_RenderFillRect(renderer, &(SDL_Rect){
+  if (SDL_RenderFillRect(renderer, &(SDL_Rect){
     .x = 0,
     .y = 0,
     .w = window_width,
     .h = padding
-  });
+  }) < 0) {
+    printf("SDL_RenderFillRect error: %s\n", SDL_GetError());
+    return -1;
+  }
   int bottom_blank_y = seconds_wheel.y + seconds_wheel.h;
-  SDL_RenderFillRect(renderer, &(SDL_Rect){
+  if (SDL_RenderFillRect(renderer, &(SDL_Rect){
     .x = 0,
     .y = bottom_blank_y,
     .w = window_width,
     .h = window_height - bottom_blank_y
-  });
+  }) < 0) {
+    printf("SDL_RenderFillRect error: %s\n", SDL_GetError());
+    return -1;
+  }
 
   set_render_color(renderer, PrimaryBlack);
   if (SDL_RenderFillRect(renderer, &submit_button) < 0) {
@@ -192,7 +203,7 @@ time_t time_input(SDL_Window* window) {
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
   if (renderer == NULL) {
     printf("SDL_CreateRenderer Error: %s\n", SDL_GetError());
-    return 1;
+    return -1;
   }
 
   for (uint i = 0; i < 60; i++) {
@@ -213,7 +224,7 @@ time_t time_input(SDL_Window* window) {
     while(SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT) {
         cleanup();
-        return 0;
+        return -1;
       }
       if (event.type == SDL_WINDOWEVENT) {
         if (event.window.event == SDL_WINDOWEVENT_EXPOSED) {
@@ -296,6 +307,4 @@ time_t time_input(SDL_Window* window) {
 
     time_input_draw();
   }
-
-  return 30 * 60;
 }

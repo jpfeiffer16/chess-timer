@@ -176,11 +176,10 @@ void audio_cb(void *userdata, Uint8 *stream, int len) {
 }
 
 int timer_ui(SDL_Window* window, time_t clock_time) {
-  bool _quit;
   prev_time = time(NULL);
   if (prev_time == -1) {
     printf("time() error: failed to obtain current time.");
-    return 0;
+    return -1;
   }
   white_timer = clock_time;
   black_timer = clock_time;
@@ -188,14 +187,14 @@ int timer_ui(SDL_Window* window, time_t clock_time) {
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
   if (renderer == NULL) {
     printf("SDL_CreateRenderer Error: %s\n", SDL_GetError());
-    return 1;
+    return -1;
   }
 
   SDL_AudioSpec wav_spec;
 
   if (SDL_LoadWAV("./assets/timer_click.wav", &wav_spec, &wav_buffer, &wav_length) == NULL) {
     printf("SDL_LoadWAV Error: %s\n", SDL_GetError());
-    return 1;
+    return -1;
   }
 
   wav_pos = wav_length;
@@ -204,7 +203,7 @@ int timer_ui(SDL_Window* window, time_t clock_time) {
 
   if (SDL_OpenAudio(&wav_spec, NULL) < 0) {
     printf("SDL_OpenAudio Error: %s", SDL_GetError());
-    return 1;
+    return -1;
   }
 
   SDL_PauseAudio(0);
@@ -212,7 +211,7 @@ int timer_ui(SDL_Window* window, time_t clock_time) {
   timer_flow();
   if (!timer_draw()) {
     printf("Unrecoverable error in draw() function. Exiting.");
-    return 1;
+    return -1;
   }
 
   SDL_Event event;
@@ -220,11 +219,10 @@ int timer_ui(SDL_Window* window, time_t clock_time) {
     SDL_Delay(50); // TODO: Verify there's no better way to do this
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT) {
-        _quit = true;
         SDL_DestroyRenderer(renderer);
         SDL_CloseAudio();
         SDL_FreeWAV(wav_buffer);
-        break;
+        return 0;
       }
       if (event.type == SDL_WINDOWEVENT) {
         if ( event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED
@@ -237,7 +235,7 @@ int timer_ui(SDL_Window* window, time_t clock_time) {
           // For now, force a draw. May be overkill. Remove if not needed.
           if (!timer_draw()) {
             printf("Unrecoverable error in draw() function. Exiting.");
-            return 1;
+            return -1;
           }
         }
       }
@@ -310,9 +308,7 @@ int timer_ui(SDL_Window* window, time_t clock_time) {
     }
     if (!timer_draw()) {
       printf("Unrecoverable error in draw() loop. Exiting.");
-      return 1;
+      return -1;
     }
-
-    if (_quit) return 0;
   }
 }
