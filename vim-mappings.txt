@@ -1,0 +1,2 @@
+Add error handling:
+0wveyif €kb€kbif (f(€ý5%A€kb < 0) {}Oprintf("pA error: %s\n", SDL_Gettit€kb€kbt€kb€kbError());return -1;
