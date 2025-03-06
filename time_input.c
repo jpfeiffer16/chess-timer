@@ -198,7 +198,12 @@ void time_input_flow() {
   submit_button.h = 80;
 }
 
-time_t time_input(SDL_Window* window) {
+time_t time_input(SDL_Window* window, time_t default_time) {
+  if (default_time) {
+    selected_minutes = default_time / 60;
+    selected_seconds = default_time % 60;
+  }
+
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
   if (renderer == NULL) {
     printf("SDL_CreateRenderer Error: %s\n", SDL_GetError());

@@ -6,6 +6,7 @@
 #include <time.h>
 #include "timer.c"
 #include "time_input.c"
+#include "state.c"
 
 TTF_Font* font;
 SDL_Renderer* renderer;
@@ -31,7 +32,9 @@ int main() {
     return 1;
   }
 
-  time_t time = time_input(window);
+  t_app_state state = get_app_state();
+  time_t time = time_input(window, state.time);
+
   if (time < 0) {
     TTF_CloseFont(font);
     TTF_Quit();
@@ -39,6 +42,9 @@ int main() {
     SDL_Quit();
     return 0;
   }
+
+  state.time = time;
+  set_app_state(state);
 
   timer_ui(window, time);
 

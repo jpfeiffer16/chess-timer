@@ -4,6 +4,7 @@
 #include <SDL_ttf.h>
 #include <stdbool.h>
 #include <time.h>
+#include <sys/stat.h>
 #include "gfx.c"
 #include "layout.h"
 
@@ -14,15 +15,16 @@ typedef enum {
   BLACK_RUNNING,
   PAUSED
 } t_mode;
+
 typedef enum {
   WHITE_BOTTOM,
   BLACK_BOTTOM,
 } t_orientation;
 
 extern TTF_Font* font;
-SDL_Renderer* renderer;
 extern int window_width;
 extern int window_height;
+SDL_Renderer* renderer;
 time_t prev_time;
 time_t white_timer;
 time_t black_timer;
