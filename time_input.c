@@ -94,7 +94,7 @@ int time_input_draw() {
     int y = i * (max_glyph_height + sight_thickness) + minutes_offset;
 
     if (SDL_RenderCopy(renderer, part.texture, NULL, &(SDL_Rect) {
-      .x = minutes_wheel.x,
+      .x = minutes_wheel.x + sight_thickness + padding,
       .y = y,
       .w = part.width,
       .h = part.height
