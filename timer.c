@@ -194,9 +194,15 @@ int timer_ui(SDL_Window* window, time_t clock_time) {
 
   SDL_AudioSpec wav_spec;
 
-  if (SDL_LoadWAV("./assets/timer_click.wav", &wav_spec, &wav_buffer, &wav_length) == NULL) {
-    printf("SDL_LoadWAV Error: %s\n", SDL_GetError());
-    return -1;
+  if (SDL_LoadWAV("./assets/timer_click.wav",
+                  &wav_spec, &wav_buffer, &wav_length) == NULL)
+  {
+    if (SDL_LoadWAV("/usr/share/chess-timer/timer_click.wav",
+                    &wav_spec, &wav_buffer, &wav_length) == NULL)
+    {
+      printf("SDL_LoadWAV Error: %s\n", SDL_GetError());
+      return -1;
+    }
   }
 
   wav_pos = wav_length;

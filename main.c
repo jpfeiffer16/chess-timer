@@ -28,6 +28,9 @@ int main() {
   TTF_Init();
   font = TTF_OpenFont("./assets/Monocraft.ttf", 80);
   if (font == NULL) {
+    font = TTF_OpenFont("/usr/share/chess-timer/Monocraft.ttf", 80);
+  }
+  if (font == NULL) {
     printf("TTF_OpenFont Error: %s\n", TTF_GetError());
     return 1;
   }
