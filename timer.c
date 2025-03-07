@@ -65,10 +65,10 @@ int timer_draw() {
   set_render_color(renderer, SecondaryBlack);
   SDL_RenderClear(renderer);
 
-  SDL_Color top_fg;
-  SDL_Color top_bg;
-  SDL_Color bottom_fg;
-  SDL_Color bottom_bg;
+  SDL_Color top_fg = { 0 };
+  SDL_Color top_bg = { 0 };
+  SDL_Color bottom_fg = { 0 };
+  SDL_Color bottom_bg = { 0 };
 
   if (orientation == WHITE_BOTTOM) {
     top_fg = PrimaryWhite;
