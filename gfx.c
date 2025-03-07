@@ -4,18 +4,22 @@
 
 #ifndef gfx_loaded
 #define EVT_BOUNDS_CHECK(evt, btn) (evt.x > btn.x \
-                            && evt.x < btn.x + btn.w \
-                            && evt.y > btn.y \
-                            && evt.y < btn.y + btn.h)
+                      && evt.x < btn.x + btn.w \
+                      && evt.y > btn.y \
+                      && evt.y < btn.y + btn.h)
 
 #define PNT_BOUNDS_CHECK(x_pnt, y_pnt, bounds) (x_pnt > bounds.x \
-                            && x_pnt < bounds.x + bounds.w \
-                            && y_pnt > bounds.y \
-                            && y_pnt < bounds.y + bounds.h)
+                      && x_pnt < bounds.x + bounds.w \
+                      && y_pnt > bounds.y \
+                      && y_pnt < bounds.y + bounds.h)
 
-static inline void set_render_color(SDL_Renderer* renderer, SDL_Color color) {
-  SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-}
+#define SET_RENDER_COLOR(renderer_ptr, color_struct) do { \
+  SDL_SetRenderDrawColor(renderer_ptr, color_struct.r, \
+                                       color_struct.g, \
+                                       color_struct.b, \
+                                       color_struct.a); \
+} while(false);
+
 
 int render_text(
   SDL_Renderer* renderer,

@@ -62,7 +62,7 @@ void timer_flow() {
 }
 
 int timer_draw() {
-  set_render_color(renderer, SecondaryBlack);
+  SET_RENDER_COLOR(renderer, SecondaryBlack);
   SDL_RenderClear(renderer);
 
   SDL_Color top_fg = { 0 };
@@ -106,14 +106,14 @@ int timer_draw() {
     }
   }
 
-  set_render_color(renderer, top_bg);
+  SET_RENDER_COLOR(renderer, top_bg);
   SDL_RenderFillRect(renderer, &top_button);
 
-  set_render_color(renderer, PrimaryBlack);
+  SET_RENDER_COLOR(renderer, PrimaryBlack);
   SDL_RenderFillRect(renderer, &pause_button);
   SDL_RenderFillRect(renderer, &flip_button);
 
-  set_render_color(renderer, bottom_bg);
+  SET_RENDER_COLOR(renderer, bottom_bg);
   SDL_RenderFillRect(renderer, &bottom_button);
 
   char* pause_icon = (mode == PAUSED) ? "▶" : "⏸";

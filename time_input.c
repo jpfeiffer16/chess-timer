@@ -74,10 +74,10 @@ void set_time_part(int* offset, int time_part) {
 }
 
 int time_input_draw() {
-  set_render_color(renderer, SecondaryBlack);
+  SET_RENDER_COLOR(renderer, SecondaryBlack);
   SDL_RenderClear(renderer);
 
-  set_render_color(renderer, PrimaryBlack);
+  SET_RENDER_COLOR(renderer, PrimaryBlack);
   if (SDL_RenderFillRect(renderer, &minutes_wheel) < 0) {
     printf("SDL_RenderFillRect Error: %s\n", SDL_GetError());
     return -1;
@@ -119,7 +119,7 @@ int time_input_draw() {
     }
   }
 
-  set_render_color(renderer, PrimaryWarning);
+  SET_RENDER_COLOR(renderer, PrimaryWarning);
   SDL_Rect sliding_sight = sight;
   for (uint i = 0; i < sight_thickness; i++) {
     sliding_sight.x++;
@@ -135,7 +135,7 @@ int time_input_draw() {
   render_text(renderer, font, ":", PrimaryWhite,
               window_width / 2 + 3, seconds_wheel.y + (seconds_wheel.h / 2), 0);
 
-  set_render_color(renderer, SecondaryBlack);
+  SET_RENDER_COLOR(renderer, SecondaryBlack);
   if (SDL_RenderFillRect(renderer, &(SDL_Rect){
     .x = 0,
     .y = 0,
@@ -156,7 +156,7 @@ int time_input_draw() {
     return -1;
   }
 
-  set_render_color(renderer, PrimaryBlack);
+  SET_RENDER_COLOR(renderer, PrimaryBlack);
   if (SDL_RenderFillRect(renderer, &submit_button) < 0) {
     printf("SDL_RenderFillRect Error: %s\n", SDL_GetError());
     return -1;
