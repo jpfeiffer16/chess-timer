@@ -66,6 +66,8 @@ t_time_part init_text(char* str) {
   assert(texture != NULL);
   part.texture = texture;
 
+  SDL_FreeSurface(sfc);
+
   return part;
 }
 
@@ -210,7 +212,7 @@ time_t time_input(SDL_Window* window, time_t default_time) {
     return -1;
   }
 
-  for (uint i = 0; i < 60; i++) {
+  for (int i = 0; i < 60; i++) {
     char str[3];
     snprintf(str, 3, "%.2d", i);
     t_time_part part = init_text(str);
