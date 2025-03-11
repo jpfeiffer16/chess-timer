@@ -23,7 +23,7 @@ int ensure_config_dir() {
     return -1;
   }
   char path[PATH_MAX_LEN] = { 0 };
-  snprintf(path, PATH_MAX_LEN - 1, "%s/.local/state/chess-timer", config_dir);
+  snprintf(path, PATH_MAX_LEN, "%s/.local/state/chess-timer", config_dir);
   struct stat stats;
   if (stat(path, &stats) != 0) {
     if (mkdir(path, 0740) < 0) {
