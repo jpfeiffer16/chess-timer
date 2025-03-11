@@ -13,7 +13,8 @@
 typedef enum {
   WHITE_RUNNING,
   BLACK_RUNNING,
-  PAUSED
+  PAUSED,
+  GAME_OVER
 } t_mode;
 
 typedef enum {
@@ -27,7 +28,9 @@ extern int window_height;
 SDL_Renderer* renderer;
 time_t prev_time;
 time_t white_timer;
+int white_moves = 0;
 time_t black_timer;
+int black_moves = 0;
 t_mode mode = PAUSED;
 t_mode prev_mode = PAUSED;
 t_orientation orientation = WHITE_BOTTOM;
@@ -38,6 +41,12 @@ SDL_Rect top_button = { 0 };
 SDL_Rect pause_button = { 0 };
 SDL_Rect flip_button = { 0 };
 SDL_Rect bottom_button = { 0 };
+
+void timer_cleanup() {
+  SDL_DestroyRenderer(renderer);
+  SDL_CloseAudio();
+  SDL_FreeWAV(wav_buffer);
+}
 
 void timer_flow() {
   top_button.w = window_width - (padding * 2);
@@ -116,7 +125,23 @@ int timer_draw() {
   SET_RENDER_COLOR(renderer, bottom_bg);
   SDL_RenderFillRect(renderer, &bottom_button);
 
-  char* pause_icon = (mode == PAUSED) ? "▶" : "⏸";
+  char* pause_icon;
+  switch (mode) {
+    case PAUSED: {
+      pause_icon = "▶";
+      break;
+    }
+    case BLACK_RUNNING:
+    case WHITE_RUNNING: {
+      pause_icon = "⏸";
+      break;
+    }
+    case GAME_OVER: {
+      pause_icon = "⏹️";
+      break;
+    }
+  }
+
   render_text(renderer, font,
               pause_icon, PrimaryWhite,
               pause_button.x + (pause_button.w / 2),
@@ -130,15 +155,17 @@ int timer_draw() {
               0);
 
 
-  char white_time_str[6];
-  snprintf( white_time_str, 6, "%.2d:%.2d",
+  char white_time_str[12];
+  snprintf( white_time_str, 12, "%.2d:%.2d(%d)",
     ((uint)white_timer) / 60 % 60,
-    ((uint)white_timer) % 60);
+    ((uint)white_timer) % 60,
+    white_moves);
 
-  char black_time_str[6];
-  snprintf(black_time_str, 6, "%.2d:%.2d",
+  char black_time_str[12];
+  snprintf(black_time_str, 12, "%.2d:%.2d(%d)",
     ((uint)black_timer) / 60 % 60,
-    ((uint)black_timer) % 60);
+    ((uint)black_timer) % 60,
+    black_moves);
 
   char *top_time = orientation == WHITE_BOTTOM ? black_time_str : white_time_str;
   char *bottom_time = orientation == WHITE_BOTTOM ? white_time_str : black_time_str;
@@ -185,6 +212,10 @@ int timer_ui(SDL_Window* window, time_t clock_time) {
   }
   white_timer = clock_time;
   black_timer = clock_time;
+  prev_mode = PAUSED;
+  mode = PAUSED;
+  white_moves = 0;
+  black_moves = 0;
 
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
   if (renderer == NULL) {
@@ -225,11 +256,13 @@ int timer_ui(SDL_Window* window, time_t clock_time) {
   SDL_Event event;
   while (true) {
     SDL_Delay(50); // TODO: Verify there's no better way to do this
+    if (white_timer < 1 || black_timer < 1) {
+      prev_mode = mode;
+      mode = GAME_OVER;
+    }
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT) {
-        SDL_DestroyRenderer(renderer);
-        SDL_CloseAudio();
-        SDL_FreeWAV(wav_buffer);
+        timer_cleanup();
         return 0;
       }
       if (event.type == SDL_WINDOWEVENT) {
@@ -250,13 +283,18 @@ int timer_ui(SDL_Window* window, time_t clock_time) {
       if (event.type == SDL_MOUSEBUTTONUP) {
         if (event.button.button == 1) { // Left click
           if (EVT_BOUNDS_CHECK(event.button, pause_button)) {
-            t_mode cur_mode = mode;
-            if (mode != PAUSED) {
-              mode = PAUSED;
+            if (mode == GAME_OVER) {
+              timer_cleanup();
+              return 1;
             } else {
-              mode = prev_mode;
+              t_mode cur_mode = mode;
+              if (mode != PAUSED) {
+                mode = PAUSED;
+              } else {
+                mode = prev_mode;
+              }
+              prev_mode = cur_mode;
             }
-            prev_mode = cur_mode;
           }
 
           if (EVT_BOUNDS_CHECK(event.button, flip_button)) {
@@ -274,11 +312,13 @@ int timer_ui(SDL_Window* window, time_t clock_time) {
                 wav_pos = 0;
               }
               mode = BLACK_RUNNING;
+              white_moves++;
             } else {
               if (mode != WHITE_RUNNING) {
                 wav_pos = 0;
               }
               mode = WHITE_RUNNING;
+              black_moves++;
             }
           }
 
@@ -289,11 +329,13 @@ int timer_ui(SDL_Window* window, time_t clock_time) {
                 wav_pos = 0;
               }
               mode = WHITE_RUNNING;
+              black_moves++;
             } else {
               if (mode != BLACK_RUNNING) {
                 wav_pos = 0;
               }
               mode = BLACK_RUNNING;
+              white_moves++;
             }
           }
         }

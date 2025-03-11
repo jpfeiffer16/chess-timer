@@ -35,21 +35,19 @@ int main() {
     return 1;
   }
 
-  t_app_state state = get_app_state();
-  time_t time = time_input(window, state.time);
+  int timer_result;
+  time_t time;
 
-  if (time < 0) {
-    TTF_CloseFont(font);
-    TTF_Quit();
-    SDL_DestroyWindow(window);
-    SDL_Quit();
-    return 0;
-  }
+  do  {
+    t_app_state state = get_app_state();
+    time = time_input(window, state.time);
 
-  state.time = time;
-  set_app_state(state);
+    if (time < 0) break;
 
-  timer_ui(window, time);
+    state.time = time;
+    set_app_state(state);
+  } while (time > -1 && (timer_result = timer_ui(window, time)) > 0);
+  printf("time: %ld, timer_result: %d", time, timer_result);
 
   TTF_CloseFont(font);
   TTF_Quit();

@@ -41,7 +41,7 @@ int max_glyph_width = 0;
 int max_glyph_height = 0;
 int sight_thickness = 10;
 
-void cleanup() {
+void time_input_cleanup() {
   for (int i = 0; i < 60; i++) {
     SDL_DestroyTexture(time_parts[i].texture);
   }
@@ -229,7 +229,7 @@ time_t time_input(SDL_Window* window, time_t default_time) {
     SDL_Delay(50);
     while(SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT) {
-        cleanup();
+        time_input_cleanup();
         return -1;
       }
       if (event.type == SDL_WINDOWEVENT) {
@@ -294,7 +294,7 @@ time_t time_input(SDL_Window* window, time_t default_time) {
             drag_state = NORMAL;
           } else if (drag_state == NORMAL) {
             if (EVT_BOUNDS_CHECK(event.button, submit_button)) {
-              cleanup();
+              time_input_cleanup();
               return (selected_minutes * 60) + selected_seconds;
             }
           }
