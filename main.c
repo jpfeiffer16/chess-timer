@@ -47,7 +47,6 @@ int main() {
     state.time = time;
     set_app_state(state);
   } while (time > -1 && (timer_result = timer_ui(window, time)) > 0);
-  printf("time: %ld, timer_result: %d", time, timer_result);
 
   TTF_CloseFont(font);
   TTF_Quit();
