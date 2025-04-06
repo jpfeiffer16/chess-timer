@@ -125,7 +125,7 @@ int timer_draw() {
   SET_RENDER_COLOR(renderer, bottom_bg);
   SDL_RenderFillRect(renderer, &bottom_button);
 
-  char* pause_icon;
+  char* pause_icon = "?";
   switch (mode) {
     case PAUSED: {
       pause_icon = "▶";
@@ -310,15 +310,15 @@ int timer_ui(SDL_Window* window, time_t clock_time) {
             if (orientation == WHITE_BOTTOM) {
               if (mode != BLACK_RUNNING) {
                 wav_pos = 0;
+              	white_moves++;
               }
               mode = BLACK_RUNNING;
-              white_moves++;
             } else {
               if (mode != WHITE_RUNNING) {
                 wav_pos = 0;
+		black_moves++;
               }
               mode = WHITE_RUNNING;
-              black_moves++;
             }
           }
 
@@ -327,15 +327,15 @@ int timer_ui(SDL_Window* window, time_t clock_time) {
             if (orientation ==  WHITE_BOTTOM) {
               if (mode != WHITE_RUNNING) {
                 wav_pos = 0;
+		black_moves++;
               }
               mode = WHITE_RUNNING;
-              black_moves++;
             } else {
               if (mode != BLACK_RUNNING) {
                 wav_pos = 0;
+		white_moves++;
               }
               mode = BLACK_RUNNING;
-              white_moves++;
             }
           }
         }
