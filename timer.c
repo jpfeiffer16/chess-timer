@@ -316,7 +316,7 @@ int timer_ui(SDL_Window* window, time_t clock_time) {
             } else {
               if (mode != WHITE_RUNNING) {
                 wav_pos = 0;
-		black_moves++;
+                black_moves++;
               }
               mode = WHITE_RUNNING;
             }
@@ -327,13 +327,13 @@ int timer_ui(SDL_Window* window, time_t clock_time) {
             if (orientation ==  WHITE_BOTTOM) {
               if (mode != WHITE_RUNNING) {
                 wav_pos = 0;
-		black_moves++;
+                black_moves++;
               }
               mode = WHITE_RUNNING;
             } else {
               if (mode != BLACK_RUNNING) {
                 wav_pos = 0;
-		white_moves++;
+                white_moves++;
               }
               mode = BLACK_RUNNING;
             }
